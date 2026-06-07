@@ -1,0 +1,3132 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f6f3eb" />
+    <title>3Dプリンター事業化ログ</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f3eb;
+        --bg-2: #fbfaf6;
+        --card: rgba(255, 255, 255, 0.9);
+        --card-strong: #ffffff;
+        --ink: #1d2420;
+        --muted: #5d6660;
+        --line: rgba(29, 36, 32, 0.14);
+        --accent: #0f766e;
+        --accent-2: #b45309;
+        --danger: #c2410c;
+        --success: #15803d;
+        --shadow: 0 18px 50px rgba(29, 36, 32, 0.12);
+        --radius-lg: 28px;
+        --radius-md: 18px;
+        --radius-sm: 12px;
+        --tap: 48px;
+        font-family: "Hiragino Sans", "Yu Gothic", "YuGothic", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background:
+          radial-gradient(circle at top left, rgba(15, 118, 110, 0.09), transparent 32rem),
+          radial-gradient(circle at top right, rgba(180, 83, 9, 0.09), transparent 28rem),
+          linear-gradient(180deg, #f9f7f1 0%, #f3efe5 100%);
+        color: var(--ink);
+      }
+
+      body {
+        -webkit-text-size-adjust: 100%;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        border: 1.5px solid var(--line);
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.97);
+        color: var(--ink);
+      }
+
+      button,
+      select,
+      input[type="date"],
+      input[type="month"],
+      input[type="number"],
+      input[type="text"],
+      textarea {
+        min-height: var(--tap);
+        padding: 0.82rem 0.9rem;
+      }
+
+      input[type="checkbox"] {
+        width: 1.15rem;
+        height: 1.15rem;
+      }
+
+      textarea {
+        min-height: 104px;
+        resize: vertical;
+      }
+
+      button {
+        min-width: 88px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      button.primary {
+        background: var(--ink);
+        color: #fff;
+        border-color: var(--ink);
+      }
+
+      button.secondary {
+        background: #fff;
+      }
+
+      button.ghost {
+        background: transparent;
+      }
+
+      button.danger {
+        background: #fff;
+        color: var(--danger);
+        border-color: rgba(194, 65, 12, 0.28);
+      }
+
+      button:disabled,
+      input:disabled,
+      select:disabled,
+      textarea:disabled {
+        opacity: 0.58;
+        cursor: not-allowed;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .page {
+        max-width: 1540px;
+        margin: 0 auto;
+        padding: 14px 14px 70px;
+      }
+
+      .hero {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.76));
+        border: 1px solid rgba(29, 36, 32, 0.08);
+        border-radius: 32px;
+        box-shadow: var(--shadow);
+        padding: 20px 18px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        font-size: 0.82rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--accent);
+        font-weight: 900;
+      }
+
+      .hero h1 {
+        margin: 0;
+        font-size: clamp(2rem, 7vw, 3.6rem);
+        line-height: 1.04;
+        letter-spacing: -0.06em;
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 1.02rem;
+        line-height: 1.7;
+        max-width: 54rem;
+      }
+
+      .notice {
+        padding: 12px 14px;
+        border-radius: 18px;
+        background: rgba(15, 118, 110, 0.08);
+        border: 1px solid rgba(15, 118, 110, 0.14);
+        color: #064e3b;
+        font-weight: 700;
+        line-height: 1.55;
+      }
+
+      .notice.error {
+        background: rgba(194, 65, 12, 0.08);
+        border-color: rgba(194, 65, 12, 0.18);
+        color: #7c2d12;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding: 12px 2px 8px;
+        margin: 8px 0 6px;
+        scrollbar-width: thin;
+      }
+
+      .tabs button {
+        white-space: nowrap;
+        min-height: 46px;
+        padding: 0.8rem 1rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.78);
+        color: var(--muted);
+        border-color: rgba(29, 36, 32, 0.09);
+      }
+
+      .tabs button.active {
+        background: var(--ink);
+        color: #fff;
+        border-color: var(--ink);
+      }
+
+      .content {
+        display: grid;
+        gap: 14px;
+      }
+
+      .section {
+        display: grid;
+        gap: 14px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      .grid.cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .grid.four {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid rgba(29, 36, 32, 0.08);
+        border-radius: 26px;
+        box-shadow: var(--shadow);
+        padding: 16px;
+      }
+
+      .card.compact {
+        padding: 14px;
+      }
+
+      .card-head {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .card-head h2,
+      .card-head h3 {
+        margin: 0;
+        font-size: 1.06rem;
+      }
+
+      .card-head p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 0.95rem;
+      }
+
+      .metric {
+        display: grid;
+        gap: 10px;
+        min-height: 118px;
+      }
+
+      .metric .label {
+        color: var(--muted);
+        font-weight: 700;
+        font-size: 0.9rem;
+        line-height: 1.4;
+      }
+
+      .metric .value {
+        font-size: clamp(1.5rem, 4.3vw, 2.4rem);
+        line-height: 1;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+      }
+
+      .metric .sub {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .form-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .form-grid.columns-2,
+      .form-grid.columns-3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .form-grid.columns-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .field {
+        display: grid;
+        gap: 7px;
+      }
+
+      .field.inline {
+        grid-template-columns: auto 1fr;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .field label {
+        font-weight: 800;
+        font-size: 0.95rem;
+        line-height: 1.35;
+      }
+
+      .field small,
+      .helper {
+        color: var(--muted);
+        font-size: 0.86rem;
+        line-height: 1.5;
+      }
+
+      .input-line {
+        display: grid;
+        gap: 8px;
+      }
+
+      .inline-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .inline-controls > * {
+        flex: 0 0 auto;
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .toolbar > * {
+        flex: 0 0 auto;
+      }
+
+      .bottom-actions {
+        position: sticky;
+        bottom: 0;
+        z-index: 4;
+        margin-top: 8px;
+        padding-top: 10px;
+        background: linear-gradient(180deg, rgba(246, 243, 235, 0.18), rgba(246, 243, 235, 0.96) 24%);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: flex-end;
+      }
+
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.45rem 0.75rem;
+        border-radius: 999px;
+        border: 1px solid rgba(29, 36, 32, 0.1);
+        background: rgba(255, 255, 255, 0.9);
+        font-weight: 700;
+        font-size: 0.88rem;
+        line-height: 1;
+      }
+
+      .pill.good {
+        color: #166534;
+        background: rgba(21, 128, 61, 0.08);
+        border-color: rgba(21, 128, 61, 0.15);
+      }
+
+      .pill.warn {
+        color: #7c2d12;
+        background: rgba(194, 65, 12, 0.08);
+        border-color: rgba(194, 65, 12, 0.15);
+      }
+
+      .pill.muted {
+        color: var(--muted);
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+        border-radius: 22px;
+        border: 1px solid rgba(29, 36, 32, 0.08);
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1120px;
+      }
+
+      th,
+      td {
+        padding: 11px 12px;
+        vertical-align: top;
+        border-bottom: 1px solid rgba(29, 36, 32, 0.08);
+        text-align: left;
+        font-size: 0.93rem;
+      }
+
+      th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: rgba(249, 247, 241, 0.96);
+        color: #34423b;
+        font-weight: 900;
+      }
+
+      tbody tr:hover {
+        background: rgba(15, 118, 110, 0.05);
+      }
+
+      td .row-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.38rem 0.68rem;
+        border-radius: 999px;
+        font-size: 0.82rem;
+        font-weight: 800;
+        line-height: 1;
+        border: 1px solid transparent;
+      }
+
+      .status-badge.active,
+      .status-badge.good {
+        background: rgba(21, 128, 61, 0.08);
+        color: #166534;
+        border-color: rgba(21, 128, 61, 0.14);
+      }
+
+      .status-badge.inactive,
+      .status-badge.bad {
+        background: rgba(194, 65, 12, 0.08);
+        color: #9a3412;
+        border-color: rgba(194, 65, 12, 0.14);
+      }
+
+      .status-badge.neutral {
+        background: rgba(100, 116, 139, 0.09);
+        color: #475569;
+        border-color: rgba(100, 116, 139, 0.14);
+      }
+
+      .summary-grid {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .summary-card {
+        padding: 14px;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(29, 36, 32, 0.08);
+      }
+
+      .summary-card .k {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+        font-weight: 800;
+      }
+
+      .summary-card .v {
+        font-size: 1.5rem;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+      }
+
+      .footer-note {
+        color: rgba(29, 36, 32, 0.7);
+        font-size: 0.86rem;
+        line-height: 1.65;
+        padding: 12px 2px 0;
+      }
+
+      .stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .stack.tight {
+        gap: 8px;
+      }
+
+      .notice-area {
+        min-height: 24px;
+      }
+
+      .muted-block {
+        color: var(--muted);
+      }
+
+      .live-calc {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .live-calc .box {
+        padding: 14px;
+        border-radius: 22px;
+        background: rgba(15, 118, 110, 0.06);
+        border: 1px solid rgba(15, 118, 110, 0.12);
+      }
+
+      .live-calc .box .label {
+        color: var(--muted);
+        font-size: 0.86rem;
+        font-weight: 800;
+        margin-bottom: 8px;
+      }
+
+      .live-calc .box .value {
+        font-size: 1.4rem;
+        font-weight: 900;
+      }
+
+      .subtle-box {
+        padding: 12px 14px;
+        border-radius: 18px;
+        background: rgba(29, 36, 32, 0.04);
+        border: 1px dashed rgba(29, 36, 32, 0.15);
+      }
+
+      .import-box {
+        display: grid;
+        gap: 12px;
+      }
+
+      .radio-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .radio-chip {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        padding: 0.55rem 0.75rem;
+        border-radius: 999px;
+        border: 1px solid rgba(29, 36, 32, 0.12);
+        background: rgba(255, 255, 255, 0.95);
+        font-weight: 700;
+      }
+
+      .mini-title {
+        margin: 0 0 8px;
+        font-size: 1rem;
+      }
+
+      .nowrap {
+        white-space: nowrap;
+      }
+
+      @media (max-width: 1020px) {
+        .grid.three,
+        .grid.four,
+        .summary-grid,
+        .live-calc,
+        .grid.cards,
+        .form-grid.columns-2,
+        .form-grid.columns-3,
+        .form-grid.columns-4 {
+          grid-template-columns: 1fr;
+        }
+
+        table {
+          min-width: 980px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .page {
+          padding-inline: 10px;
+          padding-bottom: 84px;
+        }
+
+        .hero {
+          padding: 16px 14px;
+          border-radius: 26px;
+        }
+
+        .card,
+        .card.compact {
+          padding: 14px;
+          border-radius: 22px;
+        }
+
+        .bottom-actions {
+          gap: 8px;
+        }
+
+        button {
+          width: 100%;
+        }
+
+        .toolbar button,
+        .inline-controls button,
+        .bottom-actions button,
+        .tabs button {
+          width: auto;
+        }
+
+        .tabs {
+          padding-bottom: 4px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script>
+      const STORAGE_KEY = "a1mini_business_log_v1";
+      const TAB_ORDER = ["dashboard", "products", "devlogs", "sales-input", "sales-list", "analytics", "backup"];
+      const TAB_LABELS = {
+        dashboard: "ダッシュボード",
+        products: "商品マスター",
+        devlogs: "商品開発ログ",
+        "sales-input": "売上入力",
+        "sales-list": "売上一覧",
+        analytics: "集計",
+        backup: "バックアップ"
+      };
+
+      const GENRES = ["天文用品", "ラジコン用品", "ドール用品", "宝石ルース・鉱物用品", "昆虫標本用品", "文具用品", "その他"];
+      const STAGES = ["アイデア段階", "採寸中", "設計中", "試作1回目", "試作2回目以降", "使用テスト中", "改良中", "出品準備中", "出品済み", "販売実績あり", "保留", "廃止"];
+      const PRIORITIES = ["A：すぐ進める", "B：時間がある時に進める", "C：保留", "D：廃止候補"];
+      const INPUTERS = ["本人", "妻", "長男", "長女", "次男", "弟1", "弟2", "その他"];
+      const RECORD_TYPES = ["商品アイデア", "不便ポイント", "採寸メモ", "試作記録", "印刷失敗記録", "改良案", "家族評価", "出品準備", "販売後の反応", "クレーム・改善要望", "その他"];
+      const CHANNELS = ["メルカリ", "ヤフオク", "PayPayフリマ", "BOOTH", "minne", "Creema", "X経由", "知人", "その他"];
+      const SCORE_LIMITS = { min: 1, max: 5 };
+
+      const SEED_PRODUCTS = [
+        {
+          name: "ドール用マグネットスタンド",
+          category: "ドール用品",
+          stage: "販売実績あり",
+          price: 1280,
+          cost: 200,
+          printTime: "未入力",
+          material: "PLA / PLA+",
+          priority: "A：すぐ進める",
+          memo: "メルカリに初出品後、30分で販売実績あり。価格見直し候補。",
+          active: true
+        },
+        {
+          name: "バーティノフマスク",
+          category: "天文用品",
+          stage: "試作2回目以降",
+          price: 1200,
+          cost: 150,
+          printTime: "未入力",
+          material: "黒PLA / PLA+",
+          priority: "A：すぐ進める",
+          memo: "A1 miniで作成実績あり。天文用品の販売候補。",
+          active: true
+        },
+        {
+          name: "SV226 M42フィルターホルダー収納ケース",
+          category: "天文用品",
+          stage: "設計中",
+          price: 1800,
+          cost: 250,
+          printTime: "未入力",
+          material: "PLA / PETG",
+          priority: "A：すぐ進める",
+          memo: "SVBONY SV226 M42用フィルターホルダー収納ケース。遠征時の保管用途。",
+          active: true
+        },
+        {
+          name: "2インチフィルタードロワー保管ホルダー",
+          category: "天文用品",
+          stage: "アイデア段階",
+          price: 1500,
+          cost: 200,
+          printTime: "未入力",
+          material: "PLA / PETG",
+          priority: "A：すぐ進める",
+          memo: "フィルタードロワーを安全に保管し、ホコリや傷を防ぐ。",
+          active: true
+        },
+        {
+          name: "天文用ケーブル固定クリップ",
+          category: "天文用品",
+          stage: "アイデア段階",
+          price: 800,
+          cost: 80,
+          printTime: "未入力",
+          material: "PLA / PETG",
+          priority: "B：時間がある時に進める",
+          memo: "鏡筒・赤道儀周辺のケーブル取り回し改善用。",
+          active: true
+        },
+        {
+          name: "FC-76D補助サドル",
+          category: "天文用品",
+          stage: "試作2回目以降",
+          price: 2500,
+          cost: 300,
+          printTime: "未入力",
+          material: "PETG",
+          priority: "B：時間がある時に進める",
+          memo: "タカハシFC-76D / FC-76DCU系と鏡筒バンド80S周辺の補助支持パーツ。",
+          active: true
+        },
+        {
+          name: "Samyang 135mm F2用 2点支持三脚座",
+          category: "天文用品",
+          stage: "アイデア段階",
+          price: 2800,
+          cost: 350,
+          printTime: "未入力",
+          material: "PETG",
+          priority: "B：時間がある時に進める",
+          memo: "Samyang 135mm F2を2点支持する三脚座・固定治具。",
+          active: true
+        },
+        {
+          name: "ラジコン用ダンパースタンド",
+          category: "ラジコン用品",
+          stage: "アイデア段階",
+          price: 1200,
+          cost: 150,
+          printTime: "未入力",
+          material: "PLA / PETG",
+          priority: "A：すぐ進める",
+          memo: "ダンパー整備時に転がらず、オイル注入時に安定させる。",
+          active: true
+        },
+        {
+          name: "ラジコン用ネジ・ベアリング整理トレー",
+          category: "ラジコン用品",
+          stage: "アイデア段階",
+          price: 1000,
+          cost: 120,
+          printTime: "未入力",
+          material: "PLA",
+          priority: "A：すぐ進める",
+          memo: "タミヤのバギー系・ラリー系整備用。小物紛失防止。",
+          active: true
+        },
+        {
+          name: "ラジコン用タイヤラック",
+          category: "ラジコン用品",
+          stage: "アイデア段階",
+          price: 1500,
+          cost: 200,
+          printTime: "未入力",
+          material: "PLA / PETG",
+          priority: "B：時間がある時に進める",
+          memo: "タミヤ車両のタイヤ保管・展示用。",
+          active: true
+        },
+        {
+          name: "昆虫標本ラベル位置ガイド",
+          category: "昆虫標本用品",
+          stage: "アイデア段階",
+          price: 1000,
+          cost: 100,
+          printTime: "未入力",
+          material: "PLA",
+          priority: "A：すぐ進める",
+          memo: "標本箱内のラベル位置を揃えるためのガイド。",
+          active: true
+        },
+        {
+          name: "標本針作業用ミニトレー",
+          category: "昆虫標本用品",
+          stage: "アイデア段階",
+          price: 900,
+          cost: 100,
+          printTime: "未入力",
+          material: "PLA",
+          priority: "B：時間がある時に進める",
+          memo: "昆虫標本作業中の針・小物整理用。",
+          active: true
+        },
+        {
+          name: "ドール撮影用小物台",
+          category: "ドール用品",
+          stage: "アイデア段階",
+          price: 1200,
+          cost: 150,
+          printTime: "未入力",
+          material: "PLA",
+          priority: "B：時間がある時に進める",
+          memo: "ドール撮影・展示用の小型台。",
+          active: true
+        },
+        {
+          name: "ルース撮影スタンド",
+          category: "宝石ルース・鉱物用品",
+          stage: "アイデア段階",
+          price: 1200,
+          cost: 120,
+          printTime: "未入力",
+          material: "PLA",
+          priority: "B：時間がある時に進める",
+          memo: "宝石ルースを撮影しやすくする小型スタンド。",
+          active: true
+        },
+        {
+          name: "鉱物・ルース小型展示台",
+          category: "宝石ルース・鉱物用品",
+          stage: "アイデア段階",
+          price: 1000,
+          cost: 120,
+          printTime: "未入力",
+          material: "PLA",
+          priority: "B：時間がある時に進める",
+          memo: "ミネラルショー購入品やルースの展示用。",
+          active: true
+        },
+        {
+          name: "マグネット付き鉛筆クリップ",
+          category: "文具用品",
+          stage: "試作2回目以降",
+          price: 800,
+          cost: 100,
+          printTime: "未入力",
+          material: "PLA",
+          priority: "B：時間がある時に進める",
+          memo: "磁石を使った文具・収納系小物。",
+          active: true
+        }
+      ];
+
+      const SEED_SALE = {
+        date: "2026-06-07",
+        productName: "ドール用マグネットスタンド",
+        channel: "メルカリ",
+        unitPrice: 1280,
+        quantity: 1,
+        shipping: 0,
+        fee: 128,
+        materialCost: 200,
+        packagingCost: 50,
+        otherCost: 0,
+        buyerMemo: "",
+        improvementMemo: "初出品後30分で販売。価格を上げる余地あり。"
+      };
+
+      const state = {
+        tab: "dashboard",
+        notice: "初期データを読み込みました。まずは商品マスターと売上を確認してください。",
+        noticeKind: "success",
+        db: { products: [], devLogs: [], sales: [] },
+        filters: {
+          search: "",
+          product: "",
+          genre: "",
+          month: "",
+          priorityOnly: false,
+          exhibitedOnly: false,
+          sort: "date_desc"
+        },
+        importMode: "append",
+        importText: "",
+        aiText: "",
+        forms: {
+          product: emptyProductDraft(),
+          devlog: emptyDevLogDraft(),
+          sale: emptySaleDraft()
+        }
+      };
+
+      let noticeTimer = null;
+
+      function emptyProductDraft() {
+        return {
+          id: "",
+          name: "",
+          category: GENRES[0],
+          stage: STAGES[0],
+          price: "",
+          cost: "",
+          printTime: "",
+          material: "",
+          priority: PRIORITIES[0],
+          memo: "",
+          active: true
+        };
+      }
+
+      function emptyDevLogDraft() {
+        return {
+          id: "",
+          date: todayString(),
+          inputPerson: INPUTERS[0],
+          recordType: RECORD_TYPES[0],
+          productId: "",
+          productName: "",
+          genre: GENRES[0],
+          problem: "",
+          stage: STAGES[0],
+          a1mini: "",
+          size: "",
+          material: "",
+          filament: "",
+          printTime: "",
+          printDifficulty: "",
+          demand: "",
+          competition: "",
+          targetPrice: "",
+          costMemo: "",
+          familyRating: "",
+          improvement: "",
+          nextAction: "",
+          priority: PRIORITIES[0],
+          memo: ""
+        };
+      }
+
+      function emptySaleDraft() {
+        return {
+          id: "",
+          date: todayString(),
+          productId: "",
+          productName: "",
+          genre: "",
+          channel: CHANNELS[0],
+          unitPrice: "",
+          quantity: "1",
+          shipping: "0",
+          fee: "0",
+          materialCost: "0",
+          packagingCost: "0",
+          otherCost: "0",
+          buyerMemo: "",
+          improvementMemo: ""
+        };
+      }
+
+      function todayString() {
+        try {
+          const parts = new Intl.DateTimeFormat("en-CA", {
+            timeZone: "Asia/Tokyo",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit"
+          }).formatToParts(new Date());
+          const lookup = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+          return `${lookup.year}-${lookup.month}-${lookup.day}`;
+        } catch (error) {
+          const d = new Date();
+          const pad = (n) => String(n).padStart(2, "0");
+          return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        }
+      }
+
+      function nowIso() {
+        return new Date().toISOString();
+      }
+
+      function uid(prefix) {
+        if (typeof crypto !== "undefined" && crypto && typeof crypto.randomUUID === "function") {
+          return `${prefix}_${crypto.randomUUID()}`;
+        }
+        return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
+      function numberValue(value) {
+        if (value === null || value === undefined || value === "") return 0;
+        const n = Number(value);
+        return Number.isFinite(n) ? n : 0;
+      }
+
+      function nullableNumber(value) {
+        if (value === null || value === undefined || value === "") return null;
+        const n = Number(value);
+        return Number.isFinite(n) ? n : null;
+      }
+
+      function formatYen(value) {
+        if (value === null || value === undefined || value === "") return "-";
+        const n = Number(value);
+        if (!Number.isFinite(n)) return "¥0";
+        return `¥${n.toLocaleString("ja-JP")}`;
+      }
+
+      function formatNum(value) {
+        if (value === null || value === undefined || value === "") return "-";
+        const n = Number(value);
+        if (!Number.isFinite(n)) return "0";
+        return n.toLocaleString("ja-JP");
+      }
+
+      function formatPercent(value) {
+        const n = Number(value);
+        if (!Number.isFinite(n)) return "-";
+        return `${n.toFixed(1)}%`;
+      }
+
+      function filenameSlug(prefix, ext) {
+        return `${prefix}-${todayString()}.${ext}`;
+      }
+
+      function clone(value) {
+        return JSON.parse(JSON.stringify(value));
+      }
+
+      function normalizeText(value) {
+        return String(value ?? "").trim();
+      }
+
+      function selectedProductLabel(product) {
+        if (!product) return "";
+        return `${product.name}${product.active === false ? "（無効）" : ""}`;
+      }
+
+      function productOptionMarkup(selectedId = "") {
+        const activeOptions = state.db.products
+          .slice()
+          .sort((a, b) => a.name.localeCompare(b.name, "ja"))
+          .map((product) => {
+            const selected = String(product.id) === String(selectedId) ? "selected" : "";
+            const suffix = product.active === false ? "（無効）" : "";
+            return `<option value="${escapeHtml(product.id)}" ${selected}>${escapeHtml(product.name)}${suffix} / ${escapeHtml(product.category || "")}</option>`;
+          })
+          .join("");
+        return `<option value="" ${!selectedId ? "selected" : ""}>選択してください</option>${activeOptions}`;
+      }
+
+      function allProductNames() {
+        const names = new Set();
+        state.db.products.forEach((product) => names.add(product.name));
+        state.db.sales.forEach((sale) => names.add(sale.productName));
+        return Array.from(names).filter(Boolean).sort((a, b) => a.localeCompare(b, "ja"));
+      }
+
+      function allGenresFromData() {
+        const genres = new Set(GENRES);
+        state.db.products.forEach((product) => product.category && genres.add(product.category));
+        state.db.devLogs.forEach((log) => log.genre && genres.add(log.genre));
+        state.db.sales.forEach((sale) => sale.genre && genres.add(sale.genre));
+        return Array.from(genres).filter(Boolean).sort((a, b) => a.localeCompare(b, "ja"));
+      }
+
+      function resolveProduct(id) {
+        return state.db.products.find((product) => String(product.id) === String(id)) || null;
+      }
+
+      function resolveProductByName(name) {
+        return state.db.products.find((product) => product.name === name) || null;
+      }
+
+      function enrichSale(sale) {
+        const product = sale.productId ? resolveProduct(sale.productId) : resolveProductByName(sale.productName);
+        const unitPrice = numberValue(sale.unitPrice);
+        const quantity = numberValue(sale.quantity);
+        const shipping = numberValue(sale.shipping);
+        const fee = numberValue(sale.fee);
+        const materialCost = numberValue(sale.materialCost);
+        const packagingCost = numberValue(sale.packagingCost);
+        const otherCost = numberValue(sale.otherCost);
+        const amount = unitPrice * quantity;
+        const profit = amount - shipping - fee - materialCost - packagingCost - otherCost;
+        const margin = amount > 0 ? (profit / amount) * 100 : null;
+        return {
+          ...sale,
+          productLabel: product ? product.name : sale.productName,
+          genreResolved: sale.genre || product?.category || "",
+          salesAmount: amount,
+          profit,
+          margin
+        };
+      }
+
+      function loadDatabase() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) {
+            const fresh = createDefaultDatabase();
+            saveDatabase(fresh);
+            return fresh;
+          }
+          const parsed = JSON.parse(raw);
+          const db = normalizeDatabase(parsed && parsed.data ? parsed.data : parsed);
+          ensureSeedData(db);
+          return db;
+        } catch (error) {
+          console.warn("Failed to load localStorage database:", error);
+          state.notice = "localStorageの読み込みに失敗したため、初期データで復旧しました。";
+          state.noticeKind = "error";
+          const fresh = createDefaultDatabase();
+          saveDatabase(fresh);
+          return fresh;
+        }
+      }
+
+      function createDefaultDatabase() {
+        const db = {
+          products: [],
+          devLogs: [],
+          sales: []
+        };
+        ensureSeedData(db);
+        return db;
+      }
+
+      function normalizeDatabase(input) {
+        const source = input && typeof input === "object" ? input : {};
+        const products = Array.isArray(source.products) ? source.products.map(normalizeProduct) : [];
+        const productMap = new Map(products.map((product) => [String(product.id), product]));
+        const db = {
+          products,
+          devLogs: Array.isArray(source.devLogs) ? source.devLogs.map(normalizeDevLog) : [],
+          sales: Array.isArray(source.sales) ? source.sales.map((sale) => normalizeSale(sale, productMap)) : []
+        };
+        ensureSeedData(db);
+        return db;
+      }
+
+      function normalizeProduct(raw) {
+        const now = nowIso();
+        const id = raw?.id ? String(raw.id) : uid("product");
+        return {
+          id,
+          createdAt: raw?.createdAt || now,
+          updatedAt: raw?.updatedAt || now,
+          name: normalizeText(raw?.name),
+          category: normalizeText(raw?.category) || GENRES[0],
+          stage: normalizeText(raw?.stage) || STAGES[0],
+          price: raw?.price === "" || raw?.price === null || raw?.price === undefined ? null : numberValue(raw?.price),
+          cost: raw?.cost === "" || raw?.cost === null || raw?.cost === undefined ? null : numberValue(raw?.cost),
+          printTime: normalizeText(raw?.printTime),
+          material: normalizeText(raw?.material),
+          priority: normalizeText(raw?.priority) || PRIORITIES[0],
+          memo: normalizeText(raw?.memo),
+          active: raw?.active !== false
+        };
+      }
+
+      function normalizeDevLog(raw) {
+        const now = nowIso();
+        return {
+          id: raw?.id ? String(raw.id) : uid("devlog"),
+          createdAt: raw?.createdAt || now,
+          updatedAt: raw?.updatedAt || now,
+          date: normalizeText(raw?.date) || todayString(),
+          inputPerson: normalizeText(raw?.inputPerson || raw?.person) || INPUTERS[0],
+          recordType: normalizeText(raw?.recordType || raw?.type) || RECORD_TYPES[0],
+          productId: normalizeText(raw?.productId || raw?.product_id || ""),
+          productName: normalizeText(raw?.productName || raw?.product_name || ""),
+          genre: normalizeText(raw?.genre || raw?.category) || GENRES[0],
+          problem: normalizeText(raw?.problem || raw?.issue || ""),
+          stage: normalizeText(raw?.stage) || STAGES[0],
+          a1mini: normalizeText(raw?.a1mini || raw?.a1Mini || ""),
+          size: normalizeText(raw?.size || ""),
+          material: normalizeText(raw?.material || ""),
+          filament: normalizeText(raw?.filament || ""),
+          printTime: normalizeText(raw?.printTime || ""),
+          printDifficulty: raw?.printDifficulty === "" || raw?.printDifficulty === null || raw?.printDifficulty === undefined ? null : numberValue(raw?.printDifficulty),
+          demand: raw?.demand === "" || raw?.demand === null || raw?.demand === undefined ? null : numberValue(raw?.demand),
+          competition: raw?.competition === "" || raw?.competition === null || raw?.competition === undefined ? null : numberValue(raw?.competition),
+          targetPrice: raw?.targetPrice === "" || raw?.targetPrice === null || raw?.targetPrice === undefined ? null : numberValue(raw?.targetPrice),
+          costMemo: normalizeText(raw?.costMemo || ""),
+          familyRating: raw?.familyRating === "" || raw?.familyRating === null || raw?.familyRating === undefined ? null : numberValue(raw?.familyRating),
+          improvement: normalizeText(raw?.improvement || ""),
+          nextAction: normalizeText(raw?.nextAction || ""),
+          priority: normalizeText(raw?.priority) || PRIORITIES[0],
+          memo: normalizeText(raw?.memo || "")
+        };
+      }
+
+      function normalizeSale(raw, productLookup = new Map()) {
+        const now = nowIso();
+        const product = raw?.productId ? productLookup.get(String(raw.productId)) || null : null;
+        return {
+          id: raw?.id ? String(raw.id) : uid("sale"),
+          createdAt: raw?.createdAt || now,
+          updatedAt: raw?.updatedAt || now,
+          date: normalizeText(raw?.date) || todayString(),
+          productId: normalizeText(raw?.productId || ""),
+          productName: normalizeText(raw?.productName || product?.name || ""),
+          genre: normalizeText(raw?.genre || product?.category || ""),
+          channel: normalizeText(raw?.channel) || CHANNELS[0],
+          unitPrice: raw?.unitPrice === "" || raw?.unitPrice === null || raw?.unitPrice === undefined ? 0 : numberValue(raw?.unitPrice),
+          quantity: raw?.quantity === "" || raw?.quantity === null || raw?.quantity === undefined ? 1 : numberValue(raw?.quantity),
+          shipping: raw?.shipping === "" || raw?.shipping === null || raw?.shipping === undefined ? 0 : numberValue(raw?.shipping),
+          fee: raw?.fee === "" || raw?.fee === null || raw?.fee === undefined ? 0 : numberValue(raw?.fee),
+          materialCost: raw?.materialCost === "" || raw?.materialCost === null || raw?.materialCost === undefined ? 0 : numberValue(raw?.materialCost),
+          packagingCost: raw?.packagingCost === "" || raw?.packagingCost === null || raw?.packagingCost === undefined ? 0 : numberValue(raw?.packagingCost),
+          otherCost: raw?.otherCost === "" || raw?.otherCost === null || raw?.otherCost === undefined ? 0 : numberValue(raw?.otherCost),
+          buyerMemo: normalizeText(raw?.buyerMemo || ""),
+          improvementMemo: normalizeText(raw?.improvementMemo || ""),
+          salesAmount: raw?.salesAmount === "" || raw?.salesAmount === null || raw?.salesAmount === undefined ? 0 : numberValue(raw?.salesAmount),
+          profit: raw?.profit === "" || raw?.profit === null || raw?.profit === undefined ? 0 : numberValue(raw?.profit),
+          margin: raw?.margin === "" || raw?.margin === null || raw?.margin === undefined ? null : numberValue(raw?.margin)
+        };
+      }
+
+      function ensureSeedData(db) {
+        if (!Array.isArray(db.products)) db.products = [];
+        if (!Array.isArray(db.devLogs)) db.devLogs = [];
+        if (!Array.isArray(db.sales)) db.sales = [];
+
+        if (db.products.length === 0 && db.devLogs.length === 0 && db.sales.length === 0) {
+          db.products = SEED_PRODUCTS.map((product) => ({
+            id: uid("product"),
+            createdAt: nowIso(),
+            updatedAt: nowIso(),
+            name: product.name,
+            category: product.category,
+            stage: product.stage,
+            price: product.price,
+            cost: product.cost,
+            printTime: product.printTime,
+            material: product.material,
+            priority: product.priority,
+            memo: product.memo,
+            active: product.active !== false
+          }));
+          const product = db.products.find((item) => item.name === SEED_SALE.productName);
+          db.sales = [
+            {
+              id: uid("sale"),
+              createdAt: nowIso(),
+              updatedAt: nowIso(),
+              date: SEED_SALE.date,
+              productId: product ? product.id : "",
+              productName: SEED_SALE.productName,
+              genre: product?.category || "ドール用品",
+              channel: SEED_SALE.channel,
+              unitPrice: SEED_SALE.unitPrice,
+              quantity: SEED_SALE.quantity,
+              shipping: SEED_SALE.shipping,
+              fee: SEED_SALE.fee,
+              materialCost: SEED_SALE.materialCost,
+              packagingCost: SEED_SALE.packagingCost,
+              otherCost: SEED_SALE.otherCost,
+              buyerMemo: SEED_SALE.buyerMemo,
+              improvementMemo: SEED_SALE.improvementMemo,
+              salesAmount: SEED_SALE.unitPrice * SEED_SALE.quantity,
+              profit: SEED_SALE.unitPrice * SEED_SALE.quantity - SEED_SALE.shipping - SEED_SALE.fee - SEED_SALE.materialCost - SEED_SALE.packagingCost - SEED_SALE.otherCost,
+              margin: ((SEED_SALE.unitPrice * SEED_SALE.quantity - SEED_SALE.shipping - SEED_SALE.fee - SEED_SALE.materialCost - SEED_SALE.packagingCost - SEED_SALE.otherCost) / (SEED_SALE.unitPrice * SEED_SALE.quantity)) * 100
+            }
+          ];
+        }
+      }
+
+      function saveDatabase(db = state.db) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, exportedAt: nowIso(), data: db }));
+          return true;
+        } catch (error) {
+          console.error("Failed to save database:", error);
+          showNotice("保存に失敗しました。ブラウザの保存容量やプライベートモードを確認してください。", "error");
+          return false;
+        }
+      }
+
+      function setNotice(message, kind = "success", ttl = 2600) {
+        state.notice = message;
+        state.noticeKind = kind;
+        clearTimeout(noticeTimer);
+        renderHeaderNotice();
+        if (ttl > 0) {
+          noticeTimer = setTimeout(() => {
+            state.notice = "入力内容を保存できます。";
+            state.noticeKind = "success";
+            renderHeaderNotice();
+          }, ttl);
+        }
+      }
+
+      function showNotice(message, kind = "success") {
+        state.notice = message;
+        state.noticeKind = kind;
+        renderHeaderNotice();
+      }
+
+      function renderHeaderNotice() {
+        const notice = document.getElementById("notice");
+        if (!notice) return;
+        notice.className = `notice${state.noticeKind === "error" ? " error" : ""}`;
+        notice.textContent = state.notice;
+      }
+
+      function renderApp() {
+        const app = document.getElementById("app");
+        if (!app) return;
+        app.innerHTML = `
+          <div class="page">
+            <header class="hero">
+              <div>
+                <p class="eyebrow">3D printer side business / localStorage / GitHub Pages</p>
+                <h1>3Dプリンター事業化ログ</h1>
+                <p>商品マスター、商品開発ログ、売上入力、売上一覧、商品別集計、月別集計、ジャンル別集計、CSV出力、JSONバックアップをひとつにまとめた iPhone 向けの単体Webアプリです。</p>
+              </div>
+              <div id="notice" class="notice${state.noticeKind === "error" ? " error" : ""}">${escapeHtml(state.notice)}</div>
+            </header>
+            <nav class="tabs" id="tabs">
+              ${TAB_ORDER.map((tab) => `<button type="button" data-tab="${tab}" class="${state.tab === tab ? "active" : ""}">${escapeHtml(TAB_LABELS[tab])}</button>`).join("")}
+            </nav>
+            <main class="content">
+              ${renderActiveTab()}
+            </main>
+            <footer class="footer-note">
+              このアプリのデータは、このブラウザ内に保存されます。iPhone変更・ブラウザ削除・履歴削除で消える可能性があります。定期的にJSONバックアップを保存してください。
+            </footer>
+          </div>
+        `;
+        if (state.tab === "sales-list") {
+          renderSalesTableSection();
+        }
+      }
+
+      function renderActiveTab() {
+        switch (state.tab) {
+          case "dashboard":
+            return renderDashboardTab();
+          case "products":
+            return renderProductsTab();
+          case "devlogs":
+            return renderDevLogsTab();
+          case "sales-input":
+            return renderSalesInputTab();
+          case "sales-list":
+            return renderSalesListTab();
+          case "analytics":
+            return renderAnalyticsTab();
+          case "backup":
+            return renderBackupTab();
+          default:
+            return renderDashboardTab();
+        }
+      }
+
+      function dashboardMetrics() {
+        const sales = state.db.sales.map(enrichSale);
+        const nowMonth = todayString().slice(0, 7);
+        const monthSales = sales.filter((sale) => String(sale.date || "").slice(0, 7) === nowMonth);
+        const totalSalesAmount = sales.reduce((sum, sale) => sum + sale.salesAmount, 0);
+        const totalProfit = sales.reduce((sum, sale) => sum + sale.profit, 0);
+        const totalQty = sales.reduce((sum, sale) => sum + numberValue(sale.quantity), 0);
+        return [
+          { label: "登録商品数", value: formatNum(state.db.products.length), sub: "有効・無効を含む" },
+          { label: "商品開発ログ件数", value: formatNum(state.db.devLogs.length), sub: "記録済みの試作・評価メモ" },
+          { label: "売上件数", value: formatNum(state.db.sales.length), sub: "販売記録の総件数" },
+          { label: "総売上金額", value: formatYen(totalSalesAmount), sub: "全期間の合計" },
+          { label: "総販売個数", value: formatNum(totalQty), sub: "全期間の合計" },
+          { label: "推定利益", value: formatYen(totalProfit), sub: "全期間の合計" },
+          { label: "今月の売上", value: formatYen(monthSales.reduce((sum, sale) => sum + sale.salesAmount, 0)), sub: `${nowMonth} の売上` },
+          { label: "今月の販売個数", value: formatNum(monthSales.reduce((sum, sale) => sum + numberValue(sale.quantity), 0)), sub: `${nowMonth} の個数` },
+          { label: "優先度Aの商品数", value: formatNum(state.db.products.filter((product) => product.priority === "A：すぐ進める").length), sub: "重点対応の対象" },
+          { label: "出品済み商品数", value: formatNum(state.db.products.filter((product) => ["出品済み", "販売実績あり"].includes(product.stage)).length), sub: "公開済みの作品" }
+        ];
+      }
+
+      function renderDashboardTab() {
+        const cards = dashboardMetrics()
+          .map(
+            (item) => `
+              <section class="card metric">
+                <div class="label">${escapeHtml(item.label)}</div>
+                <div class="value">${escapeHtml(item.value)}</div>
+                <div class="sub">${escapeHtml(item.sub)}</div>
+              </section>
+            `
+          )
+          .join("");
+        const recentSales = state.db.sales
+          .slice()
+          .sort((a, b) => String(b.date).localeCompare(String(a.date)))
+          .slice(0, 5)
+          .map((sale) => {
+            const row = enrichSale(sale);
+            return `
+              <tr>
+                <td class="nowrap">${escapeHtml(row.date)}</td>
+                <td>${escapeHtml(row.productLabel || row.productName)}</td>
+                <td>${escapeHtml(row.channel)}</td>
+                <td>${formatYen(row.unitPrice)}</td>
+                <td>${formatNum(row.quantity)}</td>
+                <td>${formatYen(row.salesAmount)}</td>
+                <td>${formatYen(row.profit)}</td>
+              </tr>
+            `;
+          })
+          .join("");
+        return `
+          <div class="section">
+            <section class="grid cards">${cards}</section>
+            <section class="card">
+              <div class="card-head">
+                <div>
+                  <h2>最近の売上</h2>
+                  <p>まずは最新の販売履歴をざっと確認できます。</p>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table style="min-width: 860px">
+                  <thead>
+                    <tr>
+                      <th>販売日</th>
+                      <th>商品名</th>
+                      <th>チャネル</th>
+                      <th>単価</th>
+                      <th>個数</th>
+                      <th>売上金額</th>
+                      <th>推定利益</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${recentSales || `<tr><td colspan="7">売上データがありません。</td></tr>`}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        `;
+      }
+
+      function renderProductsTab() {
+        const draft = state.forms.product;
+        const rows = state.db.products
+          .slice()
+          .sort((a, b) => a.name.localeCompare(b.name, "ja"))
+          .map(
+            (product) => `
+              <tr>
+                <td class="nowrap">${escapeHtml(product.id.slice(0, 8))}<br><span class="helper">${escapeHtml(product.id.slice(8, 16))}</span></td>
+                <td>${escapeHtml(product.name)}</td>
+                <td>${escapeHtml(product.category)}</td>
+                <td>${escapeHtml(product.stage)}</td>
+                <td>${formatYen(product.price)}</td>
+                <td>${formatYen(product.cost)}</td>
+                <td>${escapeHtml(product.printTime || "-")}</td>
+                <td>${escapeHtml(product.material || "-")}</td>
+                <td>${escapeHtml(product.priority)}</td>
+                <td>${product.active ? '<span class="status-badge active">有効</span>' : '<span class="status-badge inactive">無効</span>'}</td>
+                <td>${escapeHtml(product.memo || "-")}</td>
+                <td>
+                  <div class="row-actions">
+                    <button type="button" data-action="edit-product" data-id="${escapeHtml(product.id)}">編集</button>
+                    <button type="button" data-action="toggle-product" data-id="${escapeHtml(product.id)}" class="secondary">${product.active ? "無効化" : "有効化"}</button>
+                    <button type="button" data-action="delete-product" data-id="${escapeHtml(product.id)}" class="danger">削除</button>
+                  </div>
+                </td>
+              </tr>
+            `
+          )
+          .join("");
+        return `
+          <div class="section">
+            <section class="card">
+              <div class="card-head">
+                <div>
+                  <h2>商品マスター</h2>
+                  <p>売上入力のプルダウン元になります。まずはここを整えると、後続の記録がかなり楽になります。</p>
+                </div>
+                <div class="pill-row">
+                  <span class="pill good">初期商品を自動登録</span>
+                  <span class="pill muted">無効化優先</span>
+                </div>
+              </div>
+              <form class="stack" data-form="product">
+                <div class="grid cards">
+                  <div class="subtle-box">
+                    <div class="helper">商品ID</div>
+                    <div style="font-weight:900; font-size:1.05rem">${draft.id ? escapeHtml(draft.id) : "保存時に自動生成"}</div>
+                  </div>
+                  <div class="subtle-box">
+                    <div class="helper">保存状態</div>
+                    <div style="font-weight:900; font-size:1.05rem">${draft.id ? "編集中" : "新規作成"}</div>
+                  </div>
+                </div>
+                <div class="form-grid columns-2">
+                  <div class="field">
+                    <label>商品名 *</label>
+                    <input name="name" type="text" value="${escapeHtml(draft.name)}" required placeholder="例: ドール用マグネットスタンド" />
+                  </div>
+                  <div class="field">
+                    <label>ジャンル *</label>
+                    <select name="category" required>
+                      ${GENRES.map((genre) => `<option value="${escapeHtml(genre)}" ${draft.category === genre ? "selected" : ""}>${escapeHtml(genre)}</option>`).join("")}
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>現在ステージ</label>
+                    <select name="stage">
+                      ${STAGES.map((stage) => `<option value="${escapeHtml(stage)}" ${draft.stage === stage ? "selected" : ""}>${escapeHtml(stage)}</option>`).join("")}
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>優先度</label>
+                    <select name="priority">
+                      ${PRIORITIES.map((priority) => `<option value="${escapeHtml(priority)}" ${draft.priority === priority ? "selected" : ""}>${escapeHtml(priority)}</option>`).join("")}
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>標準販売価格</label>
+                    <input name="price" type="number" inputmode="numeric" step="1" min="0" value="${escapeHtml(draft.price)}" placeholder="1280" />
+                  </div>
+                  <div class="field">
+                    <label>標準原価</label>
+                    <input name="cost" type="number" inputmode="numeric" step="1" min="0" value="${escapeHtml(draft.cost)}" placeholder="200" />
+                  </div>
+                  <div class="field">
+                    <label>標準印刷時間</label>
+                    <input name="printTime" type="text" value="${escapeHtml(draft.printTime)}" placeholder="例: 3時間20分 / 未入力" />
+                  </div>
+                  <div class="field">
+                    <label>使用素材</label>
+                    <input name="material" type="text" value="${escapeHtml(draft.material)}" placeholder="例: PLA / PETG" />
+                  </div>
+                  <div class="field" style="grid-column: 1 / -1">
+                    <label>メモ</label>
+                    <textarea name="memo" placeholder="自由メモ">${escapeHtml(draft.memo)}</textarea>
+                  </div>
+                  <div class="field inline" style="grid-column: 1 / -1">
+                    <label>有効</label>
+                    <input name="active" type="checkbox" ${draft.active ? "checked" : ""} />
+                  </div>
+                </div>
+                <div class="bottom-actions">
+                  <button type="button" class="secondary" data-action="reset-product">入力をクリア</button>
+                  <button type="submit" class="primary">${draft.id ? "更新する" : "保存する"}</button>
+                </div>
+              </form>
+            </section>
+            <section class="card">
+              <div class="card-head">
+                <div>
+                  <h3>登録済み商品</h3>
+                  <p>無効化しても過去の売上データは消えません。</p>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>商品名</th>
+                      <th>ジャンル</th>
+                      <th>ステージ</th>
+                      <th>販売価格</th>
+                      <th>原価</th>
+                      <th>印刷時間</th>
+                      <th>素材</th>
+                      <th>優先度</th>
+                      <th>状態</th>
+                      <th>メモ</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${rows || `<tr><td colspan="12">商品がまだありません。</td></tr>`}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        `;
+      }
+
+      function renderDevLogsTab() {
+        const draft = state.forms.devlog;
+        const productChoices = `<option value="" ${!draft.productId ? "selected" : ""}>新規商品</option>` +
+          state.db.products
+            .slice()
+            .sort((a, b) => a.name.localeCompare(b.name, "ja"))
+            .map((product) => `<option value="${escapeHtml(product.id)}" ${String(draft.productId) === String(product.id) ? "selected" : ""}>${escapeHtml(product.name)}${product.active === false ? "（無効）" : ""}</option>`)
+            .join("");
+        const rows = state.db.devLogs
+          .slice()
+          .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))
+          .map(
+            (log) => `
+              <tr>
+                <td class="nowrap">${escapeHtml(log.date)}</td>
+                <td>${escapeHtml(log.inputPerson)}</td>
+                <td>${escapeHtml(log.recordType)}</td>
+                <td>${escapeHtml(log.productName || "-")}</td>
+                <td>${escapeHtml(log.genre || "-")}</td>
+                <td>${escapeHtml(log.problem || "-")}</td>
+                <td>${escapeHtml(log.stage || "-")}</td>
+                <td>${escapeHtml(log.a1mini || "-")}</td>
+                <td>${escapeHtml(log.size || "-")}</td>
+                <td>${escapeHtml(log.material || "-")}</td>
+                <td>${escapeHtml(log.filament || "-")}</td>
+                <td>${escapeHtml(log.printTime || "-")}</td>
+                <td>${log.printDifficulty ?? "-"}</td>
+                <td>${log.demand ?? "-"}</td>
+                <td>${log.competition ?? "-"}</td>
+                <td>${log.targetPrice != null ? formatYen(log.targetPrice) : "-"}</td>
+                <td>${escapeHtml(log.costMemo || "-")}</td>
+                <td>${log.familyRating ?? "-"}</td>
+                <td>${escapeHtml(log.improvement || "-")}</td>
+                <td>${escapeHtml(log.nextAction || "-")}</td>
+                <td>${escapeHtml(log.priority || "-")}</td>
+                <td>${escapeHtml(log.memo || "-")}</td>
+                <td>
+                  <div class="row-actions">
+                    <button type="button" data-action="edit-devlog" data-id="${escapeHtml(log.id)}">編集</button>
+                    <button type="button" data-action="delete-devlog" data-id="${escapeHtml(log.id)}" class="danger">削除</button>
+                  </div>
+                </td>
+              </tr>
+            `
+          )
+          .join("");
+        return `
+          <div class="section">
+            <section class="card">
+              <div class="card-head">
+                <div>
+                  <h2>商品開発ログ</h2>
+                  <p>アイデアから試作、家族評価、出品準備までを残しておくと、あとで売れ筋と失敗要因が見えやすくなります。</p>
+                </div>
+                <div class="pill-row">
+                  <span class="pill">入力は縦並び</span>
+                  <span class="pill">必須は最小限</span>
+                </div>
+              </div>
+              <form class="stack" data-form="devlog">
+                <div class="form-grid columns-2">
+                  <div class="field">
+                    <label>日付 *</label>
+                    <input name="date" type="date" value="${escapeHtml(draft.date)}" required />
+                  </div>
+                  <div class="field">
+                    <label>入力者</label>
+                    <select name="inputPerson">
+                      ${INPUTERS.map((person) => `<option value="${escapeHtml(person)}" ${draft.inputPerson === person ? "selected" : ""}>${escapeHtml(person)}</option>`).join("")}
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>記録種別 *</label>
+                    <select name="recordType" required>
+                      ${RECORD_TYPES.map((type) => `<option value="${escapeHtml(type)}" ${draft.recordType === type ? "selected" : ""}>${escapeHtml(type)}</option>`).join("")}
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>商品マスターから選択</label>
+                    <select name="productId" data-sync="devlog-product">
+                      ${productChoices}
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>商品名 *</label>
+                    <input name="productName" type="text" value="${escapeHtml(draft.productName)}" required placeholder="新規商品ならここに入力" />
+                  </div>
+                  <div class="field">
+                    <label>ジャンル *</label>
+                    <select name="genre" required>
+                      ${GENRES.map((genre) => `<option value="${escapeHtml(genre)}" ${draft.genre === genre ? "selected" : ""}>${escapeHtml(genre)}</option>`).join("")}
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>現在ステージ</label>
+                    <select name="stage">
+                      ${STAGES.map((stage) => `<option value="${escapeHtml(stage)}" ${draft.stage === stage ? "selected" : ""}>${escapeHtml(stage)}</option>`).join("")}
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>A1 miniで作れそうか</label>
+                    <input name="a1mini" type="text" value="${escapeHtml(draft.a1mini)}" placeholder="そのまま作れそう / 調整が必要 など" />
+                  </div>
+                  <div class="field">
+                    <label>おおよそのサイズ</label>
+                    <input name="size" type="text" value="${escapeHtml(draft.size)}" placeholder="例: 80 × 50 × 20 mm" />
+                  </div>
+                  <div class="field">
+                    <label>使用予定素材</label>
+                    <input name="material" type="text" value="${escapeHtml(draft.material)}" placeholder="例: PLA / PETG" />
+                  </div>
+                  <div class="field">
+                    <label>フィラメント使用量</label>
+                    <input name="filament" type="text" value="${escapeHtml(draft.filament)}" placeholder="例: 18g / 6m" />
+                  </div>
+                  <div class="field">
+                    <label>印刷時間</label>
+                    <input name="printTime" type="text" value="${escapeHtml(draft.printTime)}" placeholder="例: 2時間10分" />
+                  </div>
+                  <div class="field">
+                    <label>販売価格の目安</label>
+                    <input name="targetPrice" type="number" inputmode="numeric" step="1" min="0" value="${escapeHtml(draft.targetPrice)}" placeholder="1200" />
+                  </div>
+                </div>
+                <div class="form-grid columns-3">
+                  <div class="field">
+                    <label>印刷難易度：1〜5</label>
+                    <input name="printDifficulty" type="number" inputmode="numeric" step="1" min="1" max="5" value="${escapeHtml(draft.printDifficulty)}" />
+                  </div>
+                  <div class="field">
+                    <label>需要：1〜5</label>
+                    <input name="demand" type="number" inputmode="numeric" step="1" min="1" max="5" value="${escapeHtml(draft.demand)}" />
+                  </div>
+                  <div class="field">
+                    <label>競合の少なさ：1〜5</label>
+                    <input name="competition" type="number" inputmode="numeric" step="1" min="1" max="5" value="${escapeHtml(draft.competition)}" />
+                  </div>
+                  <div class="field">
+                    <label>家族評価：1〜5</label>
+                    <input name="familyRating" type="number" inputmode="numeric" step="1" min="1" max="5" value="${escapeHtml(draft.familyRating)}" />
+                  </div>
+                  <div class="field">
+                    <label>優先度</label>
+                    <select name="priority">
+                      ${PRIORITIES.map((priority) => `<option value="${escapeHtml(priority)}" ${draft.priority === priority ? "selected" : ""}>${escapeHtml(priority)}</option>`).join("")}
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>原価メモ</label>
+                    <input name="costMemo" type="text" value="${escapeHtml(draft.costMemo)}" placeholder="材料費や試作コストのメモ" />
+                  </div>
+                </div>
+                <div class="form-grid columns-2">
+                  <div class="field">
+                    <label>解決したい不便・問題</label>
+                    <textarea name="problem" placeholder="何が不便か、何を解決したいか">${escapeHtml(draft.problem)}</textarea>
+                  </div>
+                  <div class="field">
+                    <label>改良点・気づき</label>
+                    <textarea name="improvement" placeholder="試作の気づきや改善点">${escapeHtml(draft.improvement)}</textarea>
+                  </div>
+                  <div class="field">
+                    <label>次のアクション</label>
+                    <textarea name="nextAction" placeholder="採寸する / 設計する / 試作する など">${escapeHtml(draft.nextAction)}</textarea>
+                  </div>
+                  <div class="field">
+                    <label>メモ</label>
+                    <textarea name="memo" placeholder="自由メモ">${escapeHtml(draft.memo)}</textarea>
+                  </div>
+                </div>
+                <div class="bottom-actions">
+                  <button type="button" class="secondary" data-action="reset-devlog">入力をクリア</button>
+                  <button type="submit" class="primary">${draft.id ? "更新する" : "保存する"}</button>
+                </div>
+              </form>
+            </section>
+            <section class="card">
+              <div class="card-head">
+                <div>
+                  <h3>開発ログ一覧</h3>
+                  <p>記録が増えるほど、売れそうなアイデアと詰まりやすいポイントが見えやすくなります。</p>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>日付</th>
+                      <th>入力者</th>
+                      <th>記録種別</th>
+                      <th>商品名</th>
+                      <th>ジャンル</th>
+                      <th>問題</th>
+                      <th>ステージ</th>
+                      <th>A1 mini</th>
+                      <th>サイズ</th>
+                      <th>素材</th>
+                      <th>フィラメント</th>
+                      <th>印刷時間</th>
+                      <th>難易度</th>
+                      <th>需要</th>
+                      <th>競合</th>
+                      <th>価格目安</th>
+                      <th>原価メモ</th>
+                      <th>家族評価</th>
+                      <th>改良点</th>
+                      <th>次のアクション</th>
+                      <th>優先度</th>
+                      <th>メモ</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${rows || `<tr><td colspan="23">開発ログがまだありません。</td></tr>`}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        `;
+      }
+
+      function renderSalesInputTab() {
+        const draft = state.forms.sale;
+        const selectedProduct = draft.productId ? resolveProduct(draft.productId) : null;
+        const productOptions = productOptionMarkup(draft.productId);
+        const preview = calculateSalePreview(draft);
+        return `
+          <div class="section">
+            <section class="card">
+              <div class="card-head">
+                <div>
+                  <h2>売上入力</h2>
+                  <p>商品を選ぶと、販売単価と材料費が自動入力されます。あとから手入力で変更できます。</p>
+                </div>
+                <div class="pill-row">
+                  <span class="pill good">自動計算あり</span>
+                  <span class="pill">利益率まで表示</span>
+                </div>
+              </div>
+              <form class="stack" data-form="sale">
+                <div class="form-grid columns-2">
+                  <div class="field">
+                    <label>販売日 *</label>
+                    <input name="date" type="date" required value="${escapeHtml(draft.date)}" />
+                  </div>
+                  <div class="field">
+                    <label>商品名 *</label>
+                    <select name="productId" data-sync="sale-product" required>
+                      ${productOptions}
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>販売チャネル</label>
+                    <select name="channel">
+                      ${CHANNELS.map((channel) => `<option value="${escapeHtml(channel)}" ${draft.channel === channel ? "selected" : ""}>${escapeHtml(channel)}</option>`).join("")}
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>販売単価 *</label>
+                    <input name="unitPrice" type="number" inputmode="numeric" step="1" min="0" required value="${escapeHtml(draft.unitPrice)}" />
+                  </div>
+                  <div class="field">
+                    <label>販売個数 *</label>
+                    <input name="quantity" type="number" inputmode="numeric" step="1" min="1" required value="${escapeHtml(draft.quantity)}" />
+                  </div>
+                  <div class="field">
+                    <label>商品ジャンル</label>
+                    <input name="genre" type="text" value="${escapeHtml(draft.genre)}" placeholder="選択商品から自動入力" />
+                  </div>
+                  <div class="field">
+                    <label>送料</label>
+                    <input name="shipping" type="number" inputmode="numeric" step="1" min="0" value="${escapeHtml(draft.shipping)}" />
+                  </div>
+                  <div class="field">
+                    <label>販売手数料</label>
+                    <input name="fee" type="number" inputmode="numeric" step="1" min="0" value="${escapeHtml(draft.fee)}" />
+                  </div>
+                  <div class="field">
+                    <label>材料費</label>
+                    <input name="materialCost" type="number" inputmode="numeric" step="1" min="0" value="${escapeHtml(draft.materialCost)}" />
+                  </div>
+                  <div class="field">
+                    <label>梱包費</label>
+                    <input name="packagingCost" type="number" inputmode="numeric" step="1" min="0" value="${escapeHtml(draft.packagingCost)}" />
+                  </div>
+                  <div class="field">
+                    <label>その他費用</label>
+                    <input name="otherCost" type="number" inputmode="numeric" step="1" min="0" value="${escapeHtml(draft.otherCost)}" />
+                  </div>
+                  <div class="field">
+                    <label>売上金額</label>
+                    <input name="salesAmount" type="text" readonly value="${escapeHtml(formatYen(preview.salesAmount))}" />
+                  </div>
+                </div>
+                <div class="live-calc">
+                  <div class="box">
+                    <div class="label">推定利益</div>
+                    <div class="value" data-preview="profit">${escapeHtml(formatYen(preview.profit))}</div>
+                  </div>
+                  <div class="box">
+                    <div class="label">利益率</div>
+                    <div class="value" data-preview="margin">${escapeHtml(formatPercent(preview.margin))}</div>
+                  </div>
+                <div class="box">
+                  <div class="label">自動入力の元</div>
+                    <div class="value" data-preview="source">${escapeHtml(selectedProduct ? selectedProduct.name : draft.productName || "未選択")}</div>
+                  </div>
+                </div>
+                <div class="form-grid columns-2">
+                  <div class="field">
+                    <label>購入者メモ</label>
+                    <textarea name="buyerMemo" placeholder="購入者の要望ややり取り">${escapeHtml(draft.buyerMemo)}</textarea>
+                  </div>
+                  <div class="field">
+                    <label>改善メモ</label>
+                    <textarea name="improvementMemo" placeholder="改善点や次回対応">${escapeHtml(draft.improvementMemo)}</textarea>
+                  </div>
+                </div>
+                <div class="bottom-actions">
+                  <button type="button" class="secondary" data-action="reset-sale">入力をクリア</button>
+                  <button type="submit" class="primary">${draft.id ? "更新する" : "保存する"}</button>
+                </div>
+              </form>
+            </section>
+          </div>
+        `;
+      }
+
+      function calculateSalePreview(draft) {
+        const unitPrice = numberValue(draft.unitPrice);
+        const quantity = Math.max(1, numberValue(draft.quantity) || 1);
+        const shipping = numberValue(draft.shipping);
+        const fee = numberValue(draft.fee);
+        const materialCost = numberValue(draft.materialCost);
+        const packagingCost = numberValue(draft.packagingCost);
+        const otherCost = numberValue(draft.otherCost);
+        const salesAmount = unitPrice * quantity;
+        const profit = salesAmount - shipping - fee - materialCost - packagingCost - otherCost;
+        const margin = salesAmount > 0 ? (profit / salesAmount) * 100 : null;
+        return { salesAmount, profit, margin };
+      }
+
+      function renderSalesListTab() {
+        const controls = renderSalesListControls();
+        return `
+          <div class="section">
+            <section class="card">
+              <div class="card-head">
+                <div>
+                  <h2>売上一覧</h2>
+                  <p>検索・絞り込み・並び替えができます。編集時はフォームに読み込みます。</p>
+                </div>
+                <div class="pill-row">
+                  <span class="pill good">利益順ソートあり</span>
+                  <span class="pill">削除前に確認</span>
+                </div>
+              </div>
+              ${controls}
+            </section>
+          </div>
+        `;
+      }
+
+      function renderSalesListControls() {
+        const productNames = ["", ...allProductNames()];
+        const genres = ["", ...allGenresFromData()];
+        return `
+          <div class="stack">
+            <div class="form-grid columns-3">
+              <div class="field">
+                <label>検索</label>
+                <input name="search" data-filter="sales" type="text" value="${escapeHtml(state.filters.search)}" placeholder="商品名・チャネル・メモで検索" />
+              </div>
+              <div class="field">
+                <label>商品名で絞り込み</label>
+                <select name="product" data-filter="sales">
+                  <option value="">すべて</option>
+                  ${productNames
+                    .slice(1)
+                    .map((name) => `<option value="${escapeHtml(name)}" ${state.filters.product === name ? "selected" : ""}>${escapeHtml(name)}</option>`)
+                    .join("")}
+                </select>
+              </div>
+              <div class="field">
+                <label>ジャンルで絞り込み</label>
+                <select name="genre" data-filter="sales">
+                  <option value="">すべて</option>
+                  ${genres
+                    .slice(1)
+                    .map((genre) => `<option value="${escapeHtml(genre)}" ${state.filters.genre === genre ? "selected" : ""}>${escapeHtml(genre)}</option>`)
+                    .join("")}
+                </select>
+              </div>
+              <div class="field">
+                <label>月で絞り込み</label>
+                <input name="month" data-filter="sales" type="month" value="${escapeHtml(state.filters.month)}" />
+              </div>
+              <div class="field">
+                <label>並び替え</label>
+                <select name="sort" data-filter="sales">
+                  <option value="date_desc" ${state.filters.sort === "date_desc" ? "selected" : ""}>販売日が新しい順</option>
+                  <option value="profit_desc" ${state.filters.sort === "profit_desc" ? "selected" : ""}>利益が大きい順</option>
+                  <option value="profit_asc" ${state.filters.sort === "profit_asc" ? "selected" : ""}>利益が小さい順</option>
+                  <option value="amount_desc" ${state.filters.sort === "amount_desc" ? "selected" : ""}>売上金額が大きい順</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>表示条件</label>
+                <div class="inline-controls">
+                  <label class="radio-chip"><input name="priorityOnly" data-filter="sales" type="checkbox" ${state.filters.priorityOnly ? "checked" : ""} /> 優先度Aだけ</label>
+                  <label class="radio-chip"><input name="exhibitedOnly" data-filter="sales" type="checkbox" ${state.filters.exhibitedOnly ? "checked" : ""} /> 出品済み商品だけ</label>
+                </div>
+              </div>
+            </div>
+            <div id="sales-summary" class="summary-grid">${renderSalesSummaryCards()}</div>
+            <div id="sales-table-wrap"></div>
+          </div>
+        `;
+      }
+
+      function renderSalesSummaryCards() {
+        const rows = filteredSalesRows();
+        const totalAmount = rows.reduce((sum, row) => sum + row.salesAmount, 0);
+        const totalProfit = rows.reduce((sum, row) => sum + row.profit, 0);
+        const totalQty = rows.reduce((sum, row) => sum + numberValue(row.quantity), 0);
+        return `
+          <div class="summary-card">
+            <div class="k">表示件数</div>
+            <div class="v">${escapeHtml(formatNum(rows.length))}</div>
+          </div>
+          <div class="summary-card">
+            <div class="k">表示売上金額</div>
+            <div class="v">${escapeHtml(formatYen(totalAmount))}</div>
+          </div>
+          <div class="summary-card">
+            <div class="k">表示推定利益</div>
+            <div class="v">${escapeHtml(formatYen(totalProfit))}</div>
+          </div>
+          <div class="summary-card">
+            <div class="k">表示販売個数</div>
+            <div class="v">${escapeHtml(formatNum(totalQty))}</div>
+          </div>
+          <div class="summary-card">
+            <div class="k">平均利益率</div>
+            <div class="v">${escapeHtml(formatPercent(totalAmount > 0 ? (totalProfit / totalAmount) * 100 : null))}</div>
+          </div>
+          <div class="summary-card">
+            <div class="k">フィルタ状態</div>
+            <div class="v" style="font-size:1.02rem">${escapeHtml(renderFilterSummary())}</div>
+          </div>
+        `;
+      }
+
+      function renderFilterSummary() {
+        const parts = [];
+        if (state.filters.search) parts.push(`検索: ${state.filters.search}`);
+        if (state.filters.product) parts.push(`商品: ${state.filters.product}`);
+        if (state.filters.genre) parts.push(`ジャンル: ${state.filters.genre}`);
+        if (state.filters.month) parts.push(`月: ${state.filters.month}`);
+        if (state.filters.priorityOnly) parts.push("優先度A");
+        if (state.filters.exhibitedOnly) parts.push("出品済み");
+        return parts.length ? parts.join(" / ") : "すべて表示";
+      }
+
+      function filteredSalesRows() {
+        const search = normalizeText(state.filters.search).toLowerCase();
+        const rows = state.db.sales.map(enrichSale).filter((row) => {
+          if (state.filters.product && row.productLabel !== state.filters.product) return false;
+          if (state.filters.genre && (row.genreResolved || "") !== state.filters.genre) return false;
+          if (state.filters.month && String(row.date || "").slice(0, 7) !== state.filters.month) return false;
+          if (state.filters.priorityOnly) {
+            const product = row.productId ? resolveProduct(row.productId) : resolveProductByName(row.productName);
+            if (!product || product.priority !== "A：すぐ進める") return false;
+          }
+          if (state.filters.exhibitedOnly) {
+            const product = row.productId ? resolveProduct(row.productId) : resolveProductByName(row.productName);
+            if (!product || !["出品済み", "販売実績あり"].includes(product.stage)) return false;
+          }
+          if (search) {
+            const hay = `${row.date} ${row.productLabel || ""} ${row.channel || ""} ${row.genreResolved || ""} ${row.buyerMemo || ""} ${row.improvementMemo || ""}`.toLowerCase();
+            if (!hay.includes(search)) return false;
+          }
+          return true;
+        });
+        const sort = state.filters.sort;
+        rows.sort((a, b) => {
+          if (sort === "profit_desc") return b.profit - a.profit;
+          if (sort === "profit_asc") return a.profit - b.profit;
+          if (sort === "amount_desc") return b.salesAmount - a.salesAmount;
+          return String(b.date || "").localeCompare(String(a.date || ""));
+        });
+        return rows;
+      }
+
+      function renderSalesTableSection(standalone = false) {
+        const rows = filteredSalesRows();
+        const body = rows
+          .map(
+            (row) => `
+              <tr>
+                <td class="nowrap">${escapeHtml(row.date)}</td>
+                <td>${escapeHtml(row.productLabel || row.productName || "-")}</td>
+                <td>${escapeHtml(row.genreResolved || row.genre || "-")}</td>
+                <td>${escapeHtml(row.channel)}</td>
+                <td>${formatYen(row.unitPrice)}</td>
+                <td>${formatNum(row.quantity)}</td>
+                <td>${formatYen(row.salesAmount)}</td>
+                <td>${formatYen(row.shipping)}</td>
+                <td>${formatYen(row.fee)}</td>
+                <td>${formatYen(row.materialCost)}</td>
+                <td>${formatYen(row.packagingCost)}</td>
+                <td>${formatYen(row.otherCost)}</td>
+                <td>${formatYen(row.profit)}</td>
+                <td>${escapeHtml(formatPercent(row.margin))}</td>
+                <td>${escapeHtml(row.buyerMemo || "-")}</td>
+                <td>${escapeHtml(row.improvementMemo || "-")}</td>
+                <td>
+                  <div class="row-actions">
+                    <button type="button" data-action="edit-sale" data-id="${escapeHtml(row.id)}">編集</button>
+                    <button type="button" data-action="delete-sale" data-id="${escapeHtml(row.id)}" class="danger">削除</button>
+                  </div>
+                </td>
+              </tr>
+            `
+          )
+          .join("");
+        const markup = `
+          <div class="card-head" style="margin-bottom: 12px;">
+            <div>
+              <h3>${standalone ? "売上データ" : "売上一覧"}</h3>
+              <p>${standalone ? "検索や絞り込みに応じて表示件数が変わります。" : "下の一覧はフィルタに連動して更新されます。"}</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>販売日</th>
+                  <th>商品名</th>
+                  <th>ジャンル</th>
+                  <th>チャネル</th>
+                  <th>販売単価</th>
+                  <th>個数</th>
+                  <th>売上金額</th>
+                  <th>送料</th>
+                  <th>販売手数料</th>
+                  <th>材料費</th>
+                  <th>梱包費</th>
+                  <th>その他費用</th>
+                  <th>推定利益</th>
+                  <th>利益率</th>
+                  <th>購入者メモ</th>
+                  <th>改善メモ</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${body || `<tr><td colspan="17">条件に合う売上データがありません。</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        `;
+        if (standalone) return markup;
+        const wrap = document.getElementById("sales-table-wrap");
+        const summary = document.getElementById("sales-summary");
+        if (wrap) wrap.innerHTML = markup;
+        if (summary) summary.innerHTML = renderSalesSummaryCards();
+        return "";
+      }
+
+      function renderAnalyticsTab() {
+        const productRows = buildProductAggregates();
+        const monthRows = buildMonthAggregates();
+        const genreRows = buildGenreAggregates();
+        const candidateRows = buildCandidateRows();
+        return `
+          <div class="section">
+            <section class="card">
+              <div class="card-head">
+                <div>
+                  <h2>集計</h2>
+                  <p>商品別、月別、ジャンル別、出品候補をまとめて確認できます。</p>
+                </div>
+              </div>
+              <div class="stack">
+                <div>
+                  <h3 class="mini-title">商品別集計</h3>
+                  ${renderAggregateTable(
+                    ["商品名", "販売個数合計", "売上金額合計", "推定利益合計", "平均販売単価", "平均利益率"],
+                    productRows.map((row) => [row.name, formatNum(row.quantity), formatYen(row.amount), formatYen(row.profit), formatYen(row.avgUnitPrice), formatPercent(row.avgMargin)])
+                  )}
+                </div>
+                <div>
+                  <h3 class="mini-title">月別集計</h3>
+                  ${renderAggregateTable(
+                    ["月", "販売個数合計", "売上金額合計", "推定利益合計"],
+                    monthRows.map((row) => [row.month, formatNum(row.quantity), formatYen(row.amount), formatYen(row.profit)])
+                  )}
+                </div>
+                <div>
+                  <h3 class="mini-title">ジャンル別集計</h3>
+                  ${renderAggregateTable(
+                    ["ジャンル", "登録商品数", "販売個数合計", "売上金額合計", "推定利益合計"],
+                    genreRows.map((row) => [row.genre, formatNum(row.count), formatNum(row.quantity), formatYen(row.amount), formatYen(row.profit)])
+                  )}
+                </div>
+                <div>
+                  <h3 class="mini-title">出品候補リスト</h3>
+                  <p class="helper">需要がありそうか 4以上、競合の少なさ 3以上、印刷難易度 3以下、家族評価 4以上のログを抽出しています。</p>
+                  ${renderAggregateTable(
+                    ["商品名", "ジャンル", "需要", "競合", "難易度", "家族評価", "優先度", "次のアクション"],
+                    candidateRows.map((row) => [row.productName, row.genre, row.demand ?? "-", row.competition ?? "-", row.printDifficulty ?? "-", row.familyRating ?? "-", row.priority, row.nextAction || "-"])
+                  )}
+                </div>
+              </div>
+            </section>
+          </div>
+        `;
+      }
+
+      function renderAggregateTable(headers, rows) {
+        const thead = headers.map((header) => `<th>${escapeHtml(header)}</th>`).join("");
+        const tbody = rows
+          .map((cells) => `<tr>${cells.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}</tr>`)
+          .join("");
+        return `
+          <div class="table-wrap">
+            <table style="min-width: 980px">
+              <thead><tr>${thead}</tr></thead>
+              <tbody>${tbody || `<tr><td colspan="${headers.length}">集計対象がありません。</td></tr>`}</tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      function buildProductAggregates() {
+        const map = new Map();
+        state.db.sales.map(enrichSale).forEach((sale) => {
+          const key = sale.productId || sale.productName;
+          if (!map.has(key)) {
+            map.set(key, { name: sale.productLabel || sale.productName || "", quantity: 0, amount: 0, profit: 0 });
+          }
+          const row = map.get(key);
+          row.quantity += numberValue(sale.quantity);
+          row.amount += sale.salesAmount;
+          row.profit += sale.profit;
+        });
+        return Array.from(map.values())
+          .sort((a, b) => b.profit - a.profit)
+          .map((row) => ({
+            ...row,
+            avgUnitPrice: row.quantity > 0 ? row.amount / row.quantity : 0,
+            avgMargin: row.amount > 0 ? (row.profit / row.amount) * 100 : null
+          }));
+      }
+
+      function buildMonthAggregates() {
+        const map = new Map();
+        state.db.sales.map(enrichSale).forEach((sale) => {
+          const month = String(sale.date || "").slice(0, 7) || "不明";
+          if (!map.has(month)) {
+            map.set(month, { month, quantity: 0, amount: 0, profit: 0 });
+          }
+          const row = map.get(month);
+          row.quantity += numberValue(sale.quantity);
+          row.amount += sale.salesAmount;
+          row.profit += sale.profit;
+        });
+        return Array.from(map.values()).sort((a, b) => String(b.month).localeCompare(String(a.month)));
+      }
+
+      function buildGenreAggregates() {
+        const map = new Map();
+        state.db.products.forEach((product) => {
+          const key = product.category || "不明";
+          if (!map.has(key)) {
+            map.set(key, { genre: key, count: 0, quantity: 0, amount: 0, profit: 0 });
+          }
+          map.get(key).count += 1;
+        });
+        state.db.sales.map(enrichSale).forEach((sale) => {
+          const key = sale.genreResolved || sale.genre || "不明";
+          if (!map.has(key)) {
+            map.set(key, { genre: key, count: 0, quantity: 0, amount: 0, profit: 0 });
+          }
+          const row = map.get(key);
+          row.quantity += numberValue(sale.quantity);
+          row.amount += sale.salesAmount;
+          row.profit += sale.profit;
+        });
+        return Array.from(map.values()).sort((a, b) => b.amount - a.amount);
+      }
+
+      function buildCandidateRows() {
+        return state.db.devLogs
+          .map((log) => ({
+            ...log,
+            demand: nullableNumber(log.demand),
+            competition: nullableNumber(log.competition),
+            printDifficulty: nullableNumber(log.printDifficulty),
+            familyRating: nullableNumber(log.familyRating)
+          }))
+          .filter((log) => (log.demand ?? 0) >= 4 && (log.competition ?? 0) >= 3 && (log.printDifficulty ?? 99) <= 3 && (log.familyRating ?? 0) >= 4)
+          .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+      }
+
+      function renderBackupTab() {
+        return `
+          <div class="section">
+            <section class="card">
+              <div class="card-head">
+                <div>
+                  <h2>バックアップ</h2>
+                  <p>JSONで丸ごと保存・復元できます。CSVは各データを個別に出力できます。</p>
+                </div>
+              </div>
+              <div class="stack">
+                <div class="toolbar">
+                  <button type="button" class="primary" data-action="export-json">JSONをエクスポート</button>
+                  <button type="button" data-action="export-csv-products">商品マスターCSV</button>
+                  <button type="button" data-action="export-csv-devlogs">商品開発ログCSV</button>
+                  <button type="button" data-action="export-csv-sales">売上CSV</button>
+                  <button type="button" data-action="export-csv-product-agg">商品別集計CSV</button>
+                  <button type="button" data-action="export-csv-month-agg">月別集計CSV</button>
+                  <button type="button" data-action="export-csv-genre-agg">ジャンル別集計CSV</button>
+                </div>
+                <div class="import-box">
+                  <div class="subtle-box">
+                    <h3 class="mini-title">JSONインポート</h3>
+                    <p class="helper">エクスポートしたJSONを貼り付けるか、ファイルを選んで復元します。上書きか追加かを選べます。</p>
+                    <div class="radio-row">
+                      <label class="radio-chip"><input type="radio" name="importMode" value="append" ${state.importMode === "append" ? "checked" : ""} /> 追加</label>
+                      <label class="radio-chip"><input type="radio" name="importMode" value="replace" ${state.importMode === "replace" ? "checked" : ""} /> 上書き</label>
+                    </div>
+                    <div class="stack" style="margin-top: 10px;">
+                      <textarea id="import-json-text" placeholder='{"version":1,"data":{"products":[],"devLogs":[],"sales":[]}}'>${escapeHtml(state.importText)}</textarea>
+                      <input id="import-json-file" type="file" accept="application/json,.json" />
+                      <div class="toolbar">
+                        <button type="button" class="primary" data-action="import-json">JSONを取り込む</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="subtle-box">
+                    <h3 class="mini-title">AIメモ取込</h3>
+                    <p class="helper">ChatGPTなどで整理した商品開発ログのJSON配列を貼り付けると、商品開発ログに追加できます。</p>
+                    <textarea id="ai-import-text" placeholder='[{"date":"2026-06-07","person":"本人",...}]'>${escapeHtml(state.aiText)}</textarea>
+                    <div class="toolbar">
+                      <button type="button" class="primary" data-action="import-ai-log">商品開発ログに追加</button>
+                    </div>
+                    <p class="helper">JSONが不正な場合は、すぐ分かるエラーを表示します。</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        `;
+      }
+
+      function populateProductForm(product) {
+        state.forms.product = {
+          id: product.id,
+          name: product.name,
+          category: product.category,
+          stage: product.stage,
+          price: product.price ?? "",
+          cost: product.cost ?? "",
+          printTime: product.printTime || "",
+          material: product.material || "",
+          priority: product.priority || PRIORITIES[0],
+          memo: product.memo || "",
+          active: product.active !== false
+        };
+      }
+
+      function populateDevLogForm(log) {
+        state.forms.devlog = {
+          id: log.id,
+          date: log.date || todayString(),
+          inputPerson: log.inputPerson || INPUTERS[0],
+          recordType: log.recordType || RECORD_TYPES[0],
+          productId: log.productId || "",
+          productName: log.productName || "",
+          genre: log.genre || GENRES[0],
+          problem: log.problem || "",
+          stage: log.stage || STAGES[0],
+          a1mini: log.a1mini || "",
+          size: log.size || "",
+          material: log.material || "",
+          filament: log.filament || "",
+          printTime: log.printTime || "",
+          printDifficulty: log.printDifficulty ?? "",
+          demand: log.demand ?? "",
+          competition: log.competition ?? "",
+          targetPrice: log.targetPrice ?? "",
+          costMemo: log.costMemo || "",
+          familyRating: log.familyRating ?? "",
+          improvement: log.improvement || "",
+          nextAction: log.nextAction || "",
+          priority: log.priority || PRIORITIES[0],
+          memo: log.memo || ""
+        };
+      }
+
+      function populateSaleForm(sale) {
+        state.forms.sale = {
+          id: sale.id,
+          date: sale.date || todayString(),
+          productId: sale.productId || "",
+          productName: sale.productName || "",
+          genre: sale.genre || "",
+          channel: sale.channel || CHANNELS[0],
+          unitPrice: sale.unitPrice ?? "",
+          quantity: sale.quantity ?? "1",
+          shipping: sale.shipping ?? "0",
+          fee: sale.fee ?? "0",
+          materialCost: sale.materialCost ?? "0",
+          packagingCost: sale.packagingCost ?? "0",
+          otherCost: sale.otherCost ?? "0",
+          buyerMemo: sale.buyerMemo || "",
+          improvementMemo: sale.improvementMemo || ""
+        };
+      }
+
+      function resetProductForm() {
+        state.forms.product = emptyProductDraft();
+        renderApp();
+        setNotice("商品フォームをリセットしました。", "success");
+      }
+
+      function resetDevLogForm() {
+        state.forms.devlog = emptyDevLogDraft();
+        renderApp();
+        setNotice("商品開発ログフォームをリセットしました。", "success");
+      }
+
+      function resetSaleForm() {
+        state.forms.sale = emptySaleDraft();
+        renderApp();
+        setNotice("売上フォームをリセットしました。", "success");
+      }
+
+      function saveProductDraft() {
+        const draft = state.forms.product;
+        const name = normalizeText(draft.name);
+        const category = normalizeText(draft.category);
+        if (!name || !category) {
+          showNotice("商品名とジャンルは必須です。", "error");
+          return;
+        }
+        const existing = draft.id ? state.db.products.find((item) => item.id === draft.id) : null;
+        const item = {
+          id: existing ? existing.id : uid("product"),
+          createdAt: existing?.createdAt || nowIso(),
+          updatedAt: nowIso(),
+          name,
+          category,
+          stage: normalizeText(draft.stage) || STAGES[0],
+          price: nullableNumber(draft.price),
+          cost: nullableNumber(draft.cost),
+          printTime: normalizeText(draft.printTime),
+          material: normalizeText(draft.material),
+          priority: normalizeText(draft.priority) || PRIORITIES[0],
+          memo: normalizeText(draft.memo),
+          active: !!draft.active
+        };
+        if (existing) {
+          state.db.products = state.db.products.map((product) => (product.id === existing.id ? item : product));
+        } else {
+          state.db.products.unshift(item);
+        }
+        saveDatabase();
+        state.forms.product = emptyProductDraft();
+        renderApp();
+        setNotice("商品マスターを保存しました。", "success");
+      }
+
+      function saveDevLogDraft() {
+        const draft = state.forms.devlog;
+        const date = normalizeText(draft.date);
+        const productName = normalizeText(draft.productName);
+        const genre = normalizeText(draft.genre);
+        const recordType = normalizeText(draft.recordType);
+        if (!date || !productName || !genre || !recordType) {
+          showNotice("日付・商品名・ジャンル・記録種別は必須です。", "error");
+          return;
+        }
+        const existing = draft.id ? state.db.devLogs.find((item) => item.id === draft.id) : null;
+        const item = {
+          id: existing ? existing.id : uid("devlog"),
+          createdAt: existing?.createdAt || nowIso(),
+          updatedAt: nowIso(),
+          date,
+          inputPerson: normalizeText(draft.inputPerson) || INPUTERS[0],
+          recordType,
+          productId: normalizeText(draft.productId),
+          productName,
+          genre,
+          problem: normalizeText(draft.problem),
+          stage: normalizeText(draft.stage) || STAGES[0],
+          a1mini: normalizeText(draft.a1mini),
+          size: normalizeText(draft.size),
+          material: normalizeText(draft.material),
+          filament: normalizeText(draft.filament),
+          printTime: normalizeText(draft.printTime),
+          printDifficulty: nullableNumber(draft.printDifficulty),
+          demand: nullableNumber(draft.demand),
+          competition: nullableNumber(draft.competition),
+          targetPrice: nullableNumber(draft.targetPrice),
+          costMemo: normalizeText(draft.costMemo),
+          familyRating: nullableNumber(draft.familyRating),
+          improvement: normalizeText(draft.improvement),
+          nextAction: normalizeText(draft.nextAction),
+          priority: normalizeText(draft.priority) || PRIORITIES[0],
+          memo: normalizeText(draft.memo)
+        };
+        if (existing) {
+          state.db.devLogs = state.db.devLogs.map((log) => (log.id === existing.id ? item : log));
+        } else {
+          state.db.devLogs.unshift(item);
+        }
+        saveDatabase();
+        state.forms.devlog = emptyDevLogDraft();
+        renderApp();
+        setNotice("商品開発ログを保存しました。", "success");
+      }
+
+      function saveSaleDraft() {
+        const draft = state.forms.sale;
+        const date = normalizeText(draft.date);
+        const productId = normalizeText(draft.productId);
+        const productName = normalizeText(draft.productName);
+        const unitPrice = nullableNumber(draft.unitPrice);
+        const quantity = nullableNumber(draft.quantity);
+        if (!date || !productName || unitPrice === null || quantity === null) {
+          showNotice("販売日・商品名・販売単価・販売個数は必須です。", "error");
+          return;
+        }
+        const salesAmount = unitPrice * quantity;
+        const shipping = numberValue(draft.shipping);
+        const fee = numberValue(draft.fee);
+        const materialCost = numberValue(draft.materialCost);
+        const packagingCost = numberValue(draft.packagingCost);
+        const otherCost = numberValue(draft.otherCost);
+        const profit = salesAmount - shipping - fee - materialCost - packagingCost - otherCost;
+        const margin = salesAmount > 0 ? (profit / salesAmount) * 100 : null;
+        const product = productId ? resolveProduct(productId) : resolveProductByName(productName);
+        const existing = draft.id ? state.db.sales.find((item) => item.id === draft.id) : null;
+        const item = {
+          id: existing ? existing.id : uid("sale"),
+          createdAt: existing?.createdAt || nowIso(),
+          updatedAt: nowIso(),
+          date,
+          productId: product?.id || productId,
+          productName: product?.name || productName,
+          genre: normalizeText(draft.genre) || product?.category || "",
+          channel: normalizeText(draft.channel) || CHANNELS[0],
+          unitPrice,
+          quantity,
+          shipping,
+          fee,
+          materialCost,
+          packagingCost,
+          otherCost,
+          buyerMemo: normalizeText(draft.buyerMemo),
+          improvementMemo: normalizeText(draft.improvementMemo),
+          salesAmount,
+          profit,
+          margin
+        };
+        if (existing) {
+          state.db.sales = state.db.sales.map((sale) => (sale.id === existing.id ? item : sale));
+        } else {
+          state.db.sales.unshift(item);
+        }
+        saveDatabase();
+        state.forms.sale = emptySaleDraft();
+        renderApp();
+        setNotice("売上を保存しました。", "success");
+      }
+
+      function deleteById(collectionName, id) {
+        const confirmed = confirm("本当に削除しますか？この操作は元に戻せません。");
+        if (!confirmed) return;
+        state.db[collectionName] = state.db[collectionName].filter((item) => item.id !== id);
+        saveDatabase();
+        renderApp();
+        setNotice("削除しました。", "success");
+      }
+
+      function toggleProductActive(id) {
+        const product = resolveProduct(id);
+        if (!product) return;
+        product.active = !product.active;
+        product.updatedAt = nowIso();
+        saveDatabase();
+        renderApp();
+        setNotice(product.active ? "商品を有効にしました。" : "商品を無効にしました。", "success");
+      }
+
+      function exportJson() {
+        const payload = { version: 1, exportedAt: nowIso(), data: state.db };
+        downloadText(filenameSlug("3d-printer-business-log", "json"), JSON.stringify(payload, null, 2), "application/json;charset=utf-8");
+        setNotice("JSONをエクスポートしました。", "success");
+      }
+
+      function importJsonFromText(rawText) {
+        const text = normalizeText(rawText);
+        if (!text) {
+          showNotice("JSONが空です。", "error");
+          return;
+        }
+        let parsed;
+        try {
+          parsed = JSON.parse(text);
+        } catch (error) {
+          showNotice("JSONの形式が不正です。内容を確認してください。", "error");
+          return;
+        }
+        const mode = state.importMode;
+        let payload = parsed;
+        if (payload && typeof payload === "object" && "data" in payload) {
+          payload = payload.data;
+        }
+        const imported = normalizeBackupPayload(payload);
+        if (!imported) {
+          showNotice("JSONから商品マスター・商品開発ログ・売上データを読み取れませんでした。", "error");
+          return;
+        }
+        if (mode === "replace") {
+          state.db = normalizeDatabase(imported);
+        } else {
+          state.db = mergeDatabases(state.db, normalizeDatabase(imported));
+        }
+        ensureSeedData(state.db);
+        saveDatabase();
+        state.importText = "";
+        renderApp();
+        setNotice(mode === "replace" ? "JSONで上書き復元しました。" : "JSONを追加で取り込みました。", "success");
+      }
+
+      function normalizeBackupPayload(payload) {
+        if (!payload || typeof payload !== "object") return null;
+        if (Array.isArray(payload)) return null;
+        if ("products" in payload || "devLogs" in payload || "sales" in payload) return payload;
+        return null;
+      }
+
+      function mergeDatabases(base, imported) {
+        const result = normalizeDatabase(base);
+        const incoming = normalizeDatabase(imported);
+        result.products = mergeUniqueById(result.products, incoming.products);
+        result.devLogs = mergeUniqueById(result.devLogs, incoming.devLogs);
+        result.sales = mergeUniqueById(result.sales, incoming.sales);
+        return result;
+      }
+
+      function mergeUniqueById(existing, incoming) {
+        const map = new Map(existing.map((item) => [item.id, item]));
+        incoming.forEach((item) => {
+          if (!map.has(item.id)) {
+            map.set(item.id, item);
+          }
+        });
+        return Array.from(map.values());
+      }
+
+      function importAiLogs(rawText) {
+        const text = normalizeText(rawText);
+        if (!text) {
+          showNotice("AIメモのJSONが空です。", "error");
+          return;
+        }
+        let parsed;
+        try {
+          parsed = JSON.parse(text);
+        } catch (error) {
+          showNotice("AIメモのJSON形式が不正です。", "error");
+          return;
+        }
+        if (!Array.isArray(parsed)) {
+          showNotice("AIメモはJSON配列で貼り付けてください。", "error");
+          return;
+        }
+        const items = parsed.map(mapAiLogItem).filter(Boolean);
+        if (!items.length) {
+          showNotice("追加できる商品開発ログが見つかりませんでした。", "error");
+          return;
+        }
+        state.db.devLogs = items.concat(state.db.devLogs);
+        saveDatabase();
+        state.aiText = "";
+        renderApp();
+        setNotice(`${items.length}件の商品開発ログを追加しました。`, "success");
+      }
+
+      function mapAiLogItem(raw) {
+        if (!raw || typeof raw !== "object") return null;
+        return normalizeDevLog({
+          date: raw.date,
+          person: raw.person,
+          inputPerson: raw.person,
+          type: raw.type,
+          recordType: raw.type,
+          category: raw.category,
+          genre: raw.category,
+          productName: raw.productName,
+          product_name: raw.productName,
+          problem: raw.problem,
+          stage: raw.stage,
+          a1mini: raw.a1mini,
+          size: raw.size,
+          material: raw.material,
+          filament: raw.filament,
+          printTime: raw.printTime,
+          printDifficulty: raw.printDifficulty,
+          demand: raw.demand,
+          competition: raw.competition,
+          targetPrice: raw.targetPrice,
+          costMemo: raw.costMemo,
+          familyRating: raw.familyRating,
+          improvement: raw.improvement,
+          nextAction: raw.nextAction,
+          priority: raw.priority,
+          memo: raw.memo
+        });
+      }
+
+      function exportCsv(filename, headers, rows) {
+        const csv = [
+          headers.join(","),
+          ...rows.map((row) => row.map((cell) => csvEscape(cell)).join(","))
+        ].join("\n");
+        downloadText(filename, csv, "text/csv;charset=utf-8");
+      }
+
+      function csvEscape(value) {
+        const text = String(value ?? "");
+        if (/[",\n]/.test(text)) {
+          return `"${text.replaceAll('"', '""')}"`;
+        }
+        return text;
+      }
+
+      function productCsvRows() {
+        return state.db.products
+          .slice()
+          .sort((a, b) => a.name.localeCompare(b.name, "ja"))
+          .map((product) => [
+            product.id,
+            product.createdAt,
+            product.updatedAt,
+            product.name,
+            product.category,
+            product.stage,
+            product.price ?? "",
+            product.cost ?? "",
+            product.printTime,
+            product.material,
+            product.priority,
+            product.memo,
+            product.active ? "有効" : "無効"
+          ]);
+      }
+
+      function devLogCsvRows() {
+        return state.db.devLogs
+          .slice()
+          .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))
+          .map((log) => [
+            log.id,
+            log.createdAt,
+            log.updatedAt,
+            log.date,
+            log.inputPerson,
+            log.recordType,
+            log.productId,
+            log.productName,
+            log.genre,
+            log.problem,
+            log.stage,
+            log.a1mini,
+            log.size,
+            log.material,
+            log.filament,
+            log.printTime,
+            log.printDifficulty ?? "",
+            log.demand ?? "",
+            log.competition ?? "",
+            log.targetPrice ?? "",
+            log.costMemo,
+            log.familyRating ?? "",
+            log.improvement,
+            log.nextAction,
+            log.priority,
+            log.memo
+          ]);
+      }
+
+      function saleCsvRows() {
+        return state.db.sales
+          .map(enrichSale)
+          .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))
+          .map((sale) => [
+            sale.id,
+            sale.createdAt,
+            sale.updatedAt,
+            sale.date,
+            sale.productId,
+            sale.productLabel || sale.productName,
+            sale.genreResolved || sale.genre,
+            sale.channel,
+            sale.unitPrice,
+            sale.quantity,
+            sale.salesAmount,
+            sale.shipping,
+            sale.fee,
+            sale.materialCost,
+            sale.packagingCost,
+            sale.otherCost,
+            sale.profit,
+            sale.margin != null ? sale.margin.toFixed(1) : "",
+            sale.buyerMemo,
+            sale.improvementMemo
+          ]);
+      }
+
+      function productAggCsvRows() {
+        return buildProductAggregates().map((row) => [
+          row.name,
+          row.quantity,
+          row.amount,
+          row.profit,
+          row.avgUnitPrice,
+          row.avgMargin != null ? row.avgMargin.toFixed(1) : ""
+        ]);
+      }
+
+      function monthAggCsvRows() {
+        return buildMonthAggregates().map((row) => [row.month, row.quantity, row.amount, row.profit]);
+      }
+
+      function genreAggCsvRows() {
+        return buildGenreAggregates().map((row) => [row.genre, row.count, row.quantity, row.amount, row.profit]);
+      }
+
+      function downloadText(filename, text, mime) {
+        const blob = new Blob([text], { type: mime });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      function loadImportFile(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          state.importText = String(reader.result || "");
+          const textarea = document.getElementById("import-json-text");
+          if (textarea) textarea.value = state.importText;
+          setNotice("JSONファイルを読み込みました。取り込みボタンで復元してください。", "success");
+        };
+        reader.onerror = () => showNotice("JSONファイルの読み込みに失敗しました。", "error");
+        reader.readAsText(file);
+      }
+
+      function readFileText(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ""));
+          reader.onerror = () => reject(new Error("ファイルの読み込みに失敗しました"));
+          reader.readAsText(file);
+        });
+      }
+
+      function handleDocumentClick(event) {
+        const tabButton = event.target.closest("[data-tab]");
+        if (tabButton) {
+          state.tab = tabButton.dataset.tab;
+          renderApp();
+          return;
+        }
+
+        const actionButton = event.target.closest("[data-action]");
+        if (!actionButton) return;
+        const action = actionButton.dataset.action;
+        const id = actionButton.dataset.id;
+        if (action === "reset-product") return resetProductForm();
+        if (action === "reset-devlog") return resetDevLogForm();
+        if (action === "reset-sale") return resetSaleForm();
+        if (action === "edit-product") {
+          const product = resolveProduct(id);
+          if (!product) return;
+          populateProductForm(product);
+          state.tab = "products";
+          renderApp();
+          setNotice("商品を編集モードで読み込みました。", "success");
+          return;
+        }
+        if (action === "toggle-product") return toggleProductActive(id);
+        if (action === "delete-product") return deleteById("products", id);
+        if (action === "edit-devlog") {
+          const log = state.db.devLogs.find((item) => item.id === id);
+          if (!log) return;
+          populateDevLogForm(log);
+          state.tab = "devlogs";
+          renderApp();
+          setNotice("商品開発ログを編集モードで読み込みました。", "success");
+          return;
+        }
+        if (action === "delete-devlog") return deleteById("devLogs", id);
+        if (action === "edit-sale") {
+          const sale = state.db.sales.find((item) => item.id === id);
+          if (!sale) return;
+          populateSaleForm(sale);
+          state.tab = "sales-input";
+          renderApp();
+          updateSalePreview();
+          setNotice("売上を編集モードで読み込みました。", "success");
+          return;
+        }
+        if (action === "delete-sale") return deleteById("sales", id);
+        if (action === "export-json") return exportJson();
+        if (action === "import-json") {
+          const textArea = document.getElementById("import-json-text");
+          if (textArea) state.importText = textArea.value;
+          const fileInput = document.getElementById("import-json-file");
+          if (fileInput && fileInput.files && fileInput.files[0] && !normalizeText(state.importText)) {
+            return readFileText(fileInput.files[0])
+              .then((text) => {
+                state.importText = text;
+                const textarea = document.getElementById("import-json-text");
+                if (textarea) textarea.value = text;
+                importJsonFromText(text);
+              })
+              .catch(() => showNotice("JSONファイルの読み込みに失敗しました。", "error"));
+          }
+          return importJsonFromText(state.importText);
+        }
+        if (action === "import-ai-log") {
+          const textArea = document.getElementById("ai-import-text");
+          if (textArea) state.aiText = textArea.value;
+          return importAiLogs(state.aiText);
+        }
+        if (action === "export-csv-products") return exportCsv(filenameSlug("products", "csv"), ["id", "createdAt", "updatedAt", "name", "category", "stage", "price", "cost", "printTime", "material", "priority", "memo", "active"], productCsvRows());
+        if (action === "export-csv-devlogs") return exportCsv(filenameSlug("devlogs", "csv"), ["id", "createdAt", "updatedAt", "date", "inputPerson", "recordType", "productId", "productName", "genre", "problem", "stage", "a1mini", "size", "material", "filament", "printTime", "printDifficulty", "demand", "competition", "targetPrice", "costMemo", "familyRating", "improvement", "nextAction", "priority", "memo"], devLogCsvRows());
+        if (action === "export-csv-sales") return exportCsv(filenameSlug("sales", "csv"), ["id", "createdAt", "updatedAt", "date", "productId", "productName", "genre", "channel", "unitPrice", "quantity", "salesAmount", "shipping", "fee", "materialCost", "packagingCost", "otherCost", "profit", "margin", "buyerMemo", "improvementMemo"], saleCsvRows());
+        if (action === "export-csv-product-agg") return exportCsv(filenameSlug("product-agg", "csv"), ["商品名", "販売個数合計", "売上金額合計", "推定利益合計", "平均販売単価", "平均利益率"], productAggCsvRows());
+        if (action === "export-csv-month-agg") return exportCsv(filenameSlug("month-agg", "csv"), ["月", "販売個数合計", "売上金額合計", "推定利益合計"], monthAggCsvRows());
+        if (action === "export-csv-genre-agg") return exportCsv(filenameSlug("genre-agg", "csv"), ["ジャンル", "登録商品数", "販売個数合計", "売上金額合計", "推定利益合計"], genreAggCsvRows());
+      }
+
+      function handleDocumentInput(event) {
+        const target = event.target;
+        const form = target.closest("form[data-form]");
+        if (form) {
+          const formName = form.dataset.form;
+          if (formName === "product") {
+            handleProductInput(target);
+            return;
+          }
+          if (formName === "devlog") {
+            handleDevLogInput(target);
+            return;
+          }
+          if (formName === "sale") {
+            handleSaleInput(target);
+            return;
+          }
+        }
+        if (target.matches("[data-filter='sales']")) {
+          handleSalesFilterInput(target);
+        }
+      }
+
+      function handleDocumentChange(event) {
+        const target = event.target;
+        if (target.id === "import-json-file") {
+          loadImportFile(target.files && target.files[0]);
+          return;
+        }
+        if (target.name === "importMode") {
+          state.importMode = target.value;
+          return;
+        }
+      }
+
+      function handleProductInput(target) {
+        const draft = state.forms.product;
+        if (!target.name) return;
+        if (target.type === "checkbox") {
+          draft[target.name] = target.checked;
+        } else {
+          draft[target.name] = target.value;
+        }
+      }
+
+      function handleDevLogInput(target) {
+        const draft = state.forms.devlog;
+        if (!target.name) return;
+        if (target.name === "productId") {
+          draft.productId = target.value;
+          const product = resolveProduct(target.value);
+          if (product) {
+            draft.productName = product.name;
+            draft.genre = product.category || draft.genre;
+            draft.stage = product.stage || draft.stage;
+            const nameInput = document.querySelector("form[data-form='devlog'] input[name='productName']");
+            const genreSelect = document.querySelector("form[data-form='devlog'] select[name='genre']");
+            const stageSelect = document.querySelector("form[data-form='devlog'] select[name='stage']");
+            if (nameInput) nameInput.value = draft.productName;
+            if (genreSelect) genreSelect.value = draft.genre;
+            if (stageSelect) stageSelect.value = draft.stage;
+          } else {
+            draft.productName = "";
+            draft.genre = GENRES[0];
+            draft.stage = STAGES[0];
+            const nameInput = document.querySelector("form[data-form='devlog'] input[name='productName']");
+            const genreSelect = document.querySelector("form[data-form='devlog'] select[name='genre']");
+            const stageSelect = document.querySelector("form[data-form='devlog'] select[name='stage']");
+            if (nameInput) nameInput.value = "";
+            if (genreSelect) genreSelect.value = draft.genre;
+            if (stageSelect) stageSelect.value = draft.stage;
+          }
+          return;
+        }
+        draft[target.name] = target.value;
+      }
+
+      function handleSaleInput(target) {
+        const draft = state.forms.sale;
+        if (!target.name) return;
+        if (target.name === "productId") {
+          draft.productId = target.value;
+          const product = resolveProduct(target.value);
+          if (product) {
+            draft.productName = product.name;
+            draft.genre = product.category || draft.genre;
+            draft.unitPrice = product.price ?? "";
+            draft.materialCost = product.cost ?? "";
+          } else {
+            draft.productName = "";
+            draft.genre = "";
+            draft.unitPrice = "";
+            draft.materialCost = "";
+          }
+          syncSaleFormFields();
+          updateSalePreview();
+          return;
+        }
+        draft[target.name] = target.value;
+        if (target.name === "unitPrice" || target.name === "quantity" || target.name === "shipping" || target.name === "fee" || target.name === "materialCost" || target.name === "packagingCost" || target.name === "otherCost") {
+          updateSalePreview();
+        }
+      }
+
+      function syncSaleFormFields() {
+        const form = document.querySelector("form[data-form='sale']");
+        if (!form) return;
+        const genre = form.querySelector("input[name='genre']");
+        const unitPrice = form.querySelector("input[name='unitPrice']");
+        const materialCost = form.querySelector("input[name='materialCost']");
+        if (genre) genre.value = state.forms.sale.genre || "";
+        if (unitPrice) unitPrice.value = state.forms.sale.unitPrice ?? "";
+        if (materialCost) materialCost.value = state.forms.sale.materialCost ?? "";
+      }
+
+      function updateSalePreview() {
+        const preview = calculateSalePreview(state.forms.sale);
+        const profit = document.querySelector("[data-preview='profit']");
+        const margin = document.querySelector("[data-preview='margin']");
+        const source = document.querySelector("[data-preview='source']");
+        if (profit) profit.textContent = formatYen(preview.profit);
+        if (margin) margin.textContent = formatPercent(preview.margin);
+        if (source) source.textContent = state.forms.sale.productId ? (resolveProduct(state.forms.sale.productId)?.name || state.forms.sale.productName || "未選択") : (state.forms.sale.productName || "未選択");
+        const amountInput = document.querySelector("form[data-form='sale'] input[name='salesAmount']");
+        if (amountInput) amountInput.value = formatYen(preview.salesAmount);
+      }
+
+      function handleSalesFilterInput(target) {
+        const key = target.name;
+        if (target.type === "checkbox") {
+          state.filters[key] = target.checked;
+        } else {
+          state.filters[key] = target.value;
+        }
+        renderSalesTableSection();
+      }
+
+      function handleDocumentSubmit(event) {
+        const form = event.target.closest("form[data-form]");
+        if (!form) return;
+        event.preventDefault();
+        if (!form.checkValidity()) {
+          form.reportValidity();
+          return;
+        }
+        const name = form.dataset.form;
+        if (name === "product") return saveProductDraft();
+        if (name === "devlog") return saveDevLogDraft();
+        if (name === "sale") return saveSaleDraft();
+      }
+
+      function initialize() {
+        state.db = loadDatabase();
+        state.forms.product = emptyProductDraft();
+        state.forms.devlog = emptyDevLogDraft();
+        state.forms.sale = emptySaleDraft();
+        saveDatabase();
+        renderApp();
+        attachGlobalListeners();
+        syncSaleFormFields();
+        updateSalePreview();
+      }
+
+      function attachGlobalListeners() {
+        document.addEventListener("click", handleDocumentClick);
+        document.addEventListener("input", handleDocumentInput);
+        document.addEventListener("change", handleDocumentChange);
+        document.addEventListener("submit", handleDocumentSubmit);
+      }
+
+      initialize();
+    </script>
+  </body>
+</html>
