@@ -451,6 +451,9 @@
         border-bottom: 1px solid rgba(29, 36, 32, 0.08);
         text-align: left;
         font-size: 0.93rem;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
 
       th {
@@ -762,6 +765,17 @@
       const INPUTERS = ["本人", "妻", "長男", "長女", "次男", "弟1", "弟2", "その他"];
       const RECORD_TYPES = ["商品アイデア", "不便ポイント", "採寸メモ", "試作記録", "印刷失敗記録", "改良案", "家族評価", "出品準備", "販売後の反応", "クレーム・改善要望", "その他"];
       const CHANNELS = ["メルカリ", "ヤフオク", "PayPayフリマ", "BOOTH", "minne", "Creema", "X経由", "知人", "その他"];
+      const CHANNEL_FEE_RATES = {
+        メルカリ: 0.1,
+        ヤフオク: 0.1,
+        PayPayフリマ: 0.05,
+        BOOTH: 0.05,
+        minne: 0.1,
+        Creema: 0.11,
+        "X経由": 0,
+        知人: 0,
+        その他: 0.1
+      };
       const SCORE_LIMITS = { min: 1, max: 5 };
 
       const SEED_PRODUCTS = [
@@ -1494,6 +1508,7 @@
           quantity: "1",
           shipping: "0",
           fee: "0",
+          feeAuto: true,
           materialCost: "0",
           packagingCost: "0",
           otherCost: "0",
@@ -2442,6 +2457,7 @@
         const draft = state.forms.sale;
         const selectedProduct = draft.productId ? resolveProduct(draft.productId) : null;
         const productOptions = productOptionMarkup(draft.productId);
+        syncSaleFeeFromChannel(draft);
         const preview = calculateSalePreview(draft);
         return `
           <div class="section">
@@ -2557,6 +2573,18 @@
         const profit = salesAmount - shipping - fee - materialCost - packagingCost - otherCost;
         const margin = salesAmount > 0 ? (profit / salesAmount) * 100 : null;
         return { salesAmount, profit, margin };
+      }
+
+      function estimateChannelFee(channel, salesAmount) {
+        const rate = CHANNEL_FEE_RATES[channel] ?? CHANNEL_FEE_RATES["その他"] ?? 0;
+        return Math.max(0, Math.round(salesAmount * rate));
+      }
+
+      function syncSaleFeeFromChannel(draft, force = false) {
+        if (!draft) return;
+        if (!force && !draft.feeAuto) return;
+        const salesAmount = Math.max(0, numberValue(draft.unitPrice) * Math.max(1, numberValue(draft.quantity) || 1));
+        draft.fee = estimateChannelFee(draft.channel || CHANNELS[0], salesAmount);
       }
 
       function renderSalesListTab() {
@@ -3033,6 +3061,7 @@
           quantity: sale.quantity ?? "1",
           shipping: sale.shipping ?? "0",
           fee: sale.fee ?? "0",
+          feeAuto: sale.feeAuto ?? false,
           materialCost: sale.materialCost ?? "0",
           packagingCost: sale.packagingCost ?? "0",
           otherCost: sale.otherCost ?? "0",
@@ -3690,12 +3719,34 @@
             draft.unitPrice = "";
             draft.materialCost = "";
           }
+          draft.feeAuto = true;
+          syncSaleFeeFromChannel(draft, true);
           syncSaleFormFields();
           updateSalePreview();
           return;
         }
+        if (target.name === "channel") {
+          draft.channel = target.value;
+          draft.feeAuto = true;
+          syncSaleFeeFromChannel(draft, true);
+          syncSaleFormFields();
+          updateSalePreview();
+          return;
+        }
+        if (target.name === "fee") {
+          draft.feeAuto = false;
+          draft[target.name] = target.value;
+          updateSalePreview();
+          return;
+        }
         draft[target.name] = target.value;
-        if (target.name === "unitPrice" || target.name === "quantity" || target.name === "shipping" || target.name === "fee" || target.name === "materialCost" || target.name === "packagingCost" || target.name === "otherCost") {
+        if (target.name === "unitPrice" || target.name === "quantity") {
+          syncSaleFeeFromChannel(draft);
+          syncSaleFormFields();
+          updateSalePreview();
+          return;
+        }
+        if (target.name === "shipping" || target.name === "materialCost" || target.name === "packagingCost" || target.name === "otherCost") {
           updateSalePreview();
         }
       }
@@ -3705,9 +3756,11 @@
         if (!form) return;
         const genre = form.querySelector("input[name='genre']");
         const unitPrice = form.querySelector("input[name='unitPrice']");
+        const fee = form.querySelector("input[name='fee']");
         const materialCost = form.querySelector("input[name='materialCost']");
         if (genre) genre.value = state.forms.sale.genre || "";
         if (unitPrice) unitPrice.value = state.forms.sale.unitPrice ?? "";
+        if (fee) fee.value = state.forms.sale.fee ?? "";
         if (materialCost) materialCost.value = state.forms.sale.materialCost ?? "";
       }
 
