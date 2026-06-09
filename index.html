@@ -162,6 +162,13 @@
         max-width: 54rem;
       }
 
+      .header-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+
       .notice {
         padding: 12px 14px;
         border-radius: 18px;
@@ -644,8 +651,38 @@
   </head>
   <body>
     <div id="app"></div>
-    <script>
+    <script type="module">
+      import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+      import {
+        createUserWithEmailAndPassword,
+        getAuth,
+        onAuthStateChanged,
+        sendPasswordResetEmail,
+        signInWithEmailAndPassword,
+        signOut
+      } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+      import {
+        collection,
+        deleteDoc,
+        doc,
+        getFirestore,
+        getDocs,
+        onSnapshot,
+        setDoc,
+        writeBatch
+      } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
       const STORAGE_KEY = "a1mini_business_log_v1";
+      const FIREBASE_FAMILY_ID = "hayase-3d-business";
+      const FIREBASE_PATH = ["families", FIREBASE_FAMILY_ID];
+      const firebaseConfig = {
+        apiKey: "",
+        authDomain: "",
+        projectId: "",
+        storageBucket: "",
+        messagingSenderId: "",
+        appId: ""
+      };
       const TAB_ORDER = ["dashboard", "products", "devlogs", "sales-input", "sales-list", "analytics", "backup"];
       const TAB_LABELS = {
         dashboard: "ダッシュボード",
@@ -880,6 +917,34 @@
         notice: "初期データを読み込みました。まずは商品マスターと売上を確認してください。",
         noticeKind: "success",
         db: { products: [], devLogs: [], sales: [] },
+        auth: {
+          ready: false,
+          user: null,
+          email: "",
+          error: "",
+          emailInput: "",
+          passwordInput: "",
+          localMode: false
+        },
+        firebase: {
+          app: null,
+          auth: null,
+          db: null,
+          configured: false,
+          initialized: false,
+          seedAttempted: false,
+          unsubscribers: [],
+          collectionsReady: { products: false, devLogs: false, sales: false },
+          remoteDb: { products: [], devLogs: [], sales: [] }
+        },
+        sync: {
+          backend: "local",
+          status: "オフライン/ローカル表示",
+          detail: "localStorage キャッシュ",
+          saving: false,
+          error: "",
+          lastSyncedAt: ""
+        },
         filters: {
           search: "",
           product: "",
@@ -900,6 +965,415 @@
       };
 
       let noticeTimer = null;
+
+      function emptyDatabase() {
+        return { products: [], devLogs: [], sales: [] };
+      }
+
+      function isFirebaseConfigured() {
+        return [firebaseConfig.apiKey, firebaseConfig.authDomain, firebaseConfig.projectId, firebaseConfig.appId].every((value) => normalizeText(value));
+      }
+
+      function cloneDatabase(db) {
+        return normalizeDatabase(db || emptyDatabase(), { seed: false });
+      }
+
+      function setSyncState(status, detail = "", error = "") {
+        state.sync.status = status;
+        state.sync.detail = detail;
+        state.sync.error = error;
+        state.sync.saving = status === "保存中";
+        if (state.auth.ready) {
+          renderApp();
+        }
+      }
+
+      function setAuthState(next) {
+        state.auth = { ...state.auth, ...next };
+      }
+
+      function setSessionToLocal(detail = "localStorage キャッシュ") {
+        state.auth.localMode = true;
+        state.sync.backend = "local";
+        setSyncState("オフライン/ローカル表示", detail);
+      }
+
+      function setSessionToFirestore(detail = "同期済み") {
+        state.auth.localMode = false;
+        state.sync.backend = "firestore";
+        setSyncState("同期済み", detail);
+      }
+
+      function setUnauthenticatedState(detail = "Firebase にログインしてください。") {
+        state.auth.localMode = false;
+        state.sync.backend = "firestore";
+        state.sync.status = "オフライン/ローカル表示";
+        state.sync.detail = detail;
+        state.sync.error = "";
+        state.sync.saving = false;
+      }
+
+      function familyDocRef() {
+        return state.firebase.db ? doc(state.firebase.db, ...FIREBASE_PATH) : null;
+      }
+
+      function familyCollectionRef(name) {
+        const familyRef = familyDocRef();
+        return familyRef ? collection(familyRef, name) : null;
+      }
+
+      function collectionDocsToArray(snapshot, normalizer) {
+        return snapshot.docs.map((docSnap) => normalizer({ id: docSnap.id, ...docSnap.data() }));
+      }
+
+      function remoteDbFromCollections() {
+        return {
+          products: (state.firebase.remoteDb.products || []).map((item) => ({ ...item })),
+          devLogs: (state.firebase.remoteDb.devLogs || []).map((item) => ({ ...item })),
+          sales: (state.firebase.remoteDb.sales || []).map((item) => ({ ...item }))
+        };
+      }
+
+      function persistLocalCache(db = state.db) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, exportedAt: nowIso(), data: db }));
+          return true;
+        } catch (error) {
+          console.error("Failed to save database:", error);
+          return false;
+        }
+      }
+
+      function loadLocalCache() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) {
+            const fresh = createDefaultDatabase();
+            persistLocalCache(fresh);
+            return fresh;
+          }
+          const parsed = JSON.parse(raw);
+          const db = normalizeDatabase(parsed && parsed.data ? parsed.data : parsed);
+          ensureSeedData(db);
+          return db;
+        } catch (error) {
+          console.warn("Failed to load localStorage database:", error);
+          state.notice = "localStorageの読み込みに失敗したため、初期データで復旧しました。";
+          state.noticeKind = "error";
+          const fresh = createDefaultDatabase();
+          persistLocalCache(fresh);
+          return fresh;
+        }
+      }
+
+      async function writeCollectionDoc(name, item) {
+        if (!state.firebase.db || !state.firebase.auth || !state.auth.user) return;
+        const ref = collection(familyDocRef(), name);
+        await setDoc(doc(ref, item.id), item);
+      }
+
+      async function deleteCollectionDoc(name, id) {
+        if (!state.firebase.db || !state.firebase.auth || !state.auth.user) return;
+        const ref = collection(familyDocRef(), name);
+        await deleteDoc(doc(ref, id));
+      }
+
+      function collectionLabel(name) {
+        return {
+          products: "商品マスター",
+          devLogs: "商品開発ログ",
+          sales: "売上データ"
+        }[name] || name;
+      }
+
+      function queueFirestoreUpsert(name, item) {
+        if (!state.firebase.db || !state.auth.user || state.auth.localMode) return;
+        setSyncState("保存中", `${collectionLabel(name)} を同期中`);
+        void writeCollectionDoc(name, item)
+          .then(() => setSessionToFirestore(`${collectionLabel(name)} を同期しました`))
+          .catch(handleFirestoreError);
+      }
+
+      function queueFirestoreRemove(name, id) {
+        if (!state.firebase.db || !state.auth.user || state.auth.localMode) return;
+        setSyncState("保存中", `${collectionLabel(name)} を削除同期中`);
+        void deleteCollectionDoc(name, id)
+          .then(() => setSessionToFirestore(`${collectionLabel(name)} を削除しました`))
+          .catch(handleFirestoreError);
+      }
+
+      async function fetchCollectionOnce(name, normalizer) {
+        const ref = familyCollectionRef(name);
+        if (!ref) return [];
+        const snapshot = await getDocs(ref);
+        return collectionDocsToArray(snapshot, normalizer);
+      }
+
+      function clearFirestoreListeners() {
+        state.firebase.unsubscribers.forEach((unsubscribe) => {
+          try {
+            unsubscribe();
+          } catch (error) {
+            console.warn("Listener cleanup failed:", error);
+          }
+        });
+        state.firebase.unsubscribers = [];
+      }
+
+      function applyRemoteDb(db) {
+        state.firebase.remoteDb = cloneDatabase(db);
+        state.db = cloneDatabase(db);
+        persistLocalCache(state.db);
+        if (state.auth.ready) {
+          renderApp();
+        }
+      }
+
+      function markCollectionReady(name, rows, normalizer) {
+        state.firebase.remoteDb[name] = rows.map((row) => normalizer(row));
+        state.firebase.collectionsReady[name] = true;
+        if (state.firebase.collectionsReady.products && state.firebase.collectionsReady.devLogs && state.firebase.collectionsReady.sales) {
+          applyRemoteDb(remoteDbFromCollections());
+          setSessionToFirestore(`最終同期 ${new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}`);
+        }
+      }
+
+      async function seedRemoteIfEmpty() {
+        if (!state.firebase.db || state.firebase.seedAttempted) return;
+        const remote = await Promise.all([
+          fetchCollectionOnce("products", normalizeProduct),
+          fetchCollectionOnce("devLogs", normalizeDevLog),
+          fetchCollectionOnce("sales", normalizeSale)
+        ]);
+        const [products, devLogs, sales] = remote;
+        if (products.length || devLogs.length || sales.length) {
+          state.firebase.remoteDb = { products, devLogs, sales };
+          applyRemoteDb(remoteDbFromCollections());
+          return;
+        }
+        state.firebase.seedAttempted = true;
+        setSyncState("保存中", "初期データをFirestoreへ登録中");
+        const batch = writeBatch(state.firebase.db);
+        SEED_PRODUCTS.forEach((product) => {
+          const item = normalizeProduct({
+            id: uid("product"),
+            createdAt: nowIso(),
+            updatedAt: nowIso(),
+            name: product.name,
+            category: product.category,
+            stage: product.stage,
+            price: product.price,
+            cost: product.cost,
+            printTime: product.printTime,
+            material: product.material,
+            priority: product.priority,
+            memo: product.memo,
+            active: product.active
+          });
+          batch.set(doc(collection(familyDocRef(), "products"), item.id), item);
+        });
+        const seedProduct = SEED_PRODUCTS.find((item) => item.name === SEED_SALE.productName);
+        const saleItem = normalizeSale({
+          id: uid("sale"),
+          createdAt: nowIso(),
+          updatedAt: nowIso(),
+          date: SEED_SALE.date,
+          productId: "",
+          productName: SEED_SALE.productName,
+          genre: seedProduct?.category || "ドール用品",
+          channel: SEED_SALE.channel,
+          unitPrice: SEED_SALE.unitPrice,
+          quantity: SEED_SALE.quantity,
+          shipping: SEED_SALE.shipping,
+          fee: SEED_SALE.fee,
+          materialCost: SEED_SALE.materialCost,
+          packagingCost: SEED_SALE.packagingCost,
+          otherCost: SEED_SALE.otherCost,
+          buyerMemo: SEED_SALE.buyerMemo,
+          improvementMemo: SEED_SALE.improvementMemo,
+          salesAmount: SEED_SALE.unitPrice * SEED_SALE.quantity,
+          profit: SEED_SALE.unitPrice * SEED_SALE.quantity - SEED_SALE.shipping - SEED_SALE.fee - SEED_SALE.materialCost - SEED_SALE.packagingCost - SEED_SALE.otherCost,
+          margin: ((SEED_SALE.unitPrice * SEED_SALE.quantity - SEED_SALE.shipping - SEED_SALE.fee - SEED_SALE.materialCost - SEED_SALE.packagingCost - SEED_SALE.otherCost) / (SEED_SALE.unitPrice * SEED_SALE.quantity)) * 100
+        });
+        batch.set(doc(collection(familyDocRef(), "sales"), saleItem.id), saleItem);
+        await batch.commit();
+      }
+
+      async function startFirestoreSync() {
+        if (!state.firebase.db || !state.auth.user) return;
+        clearFirestoreListeners();
+        state.firebase.collectionsReady = { products: false, devLogs: false, sales: false };
+        try {
+          const [products, devLogs, sales] = await Promise.all([
+            fetchCollectionOnce("products", normalizeProduct),
+            fetchCollectionOnce("devLogs", normalizeDevLog),
+            fetchCollectionOnce("sales", normalizeSale)
+          ]);
+          state.firebase.remoteDb = { products, devLogs, sales };
+          applyRemoteDb(remoteDbFromCollections());
+          await seedRemoteIfEmpty();
+          const productsRef = familyCollectionRef("products");
+          const devLogsRef = familyCollectionRef("devLogs");
+          const salesRef = familyCollectionRef("sales");
+          if (!productsRef || !devLogsRef || !salesRef) return;
+          state.firebase.unsubscribers.push(
+            onSnapshot(productsRef, (snapshot) => {
+              markCollectionReady("products", collectionDocsToArray(snapshot, normalizeProduct), normalizeProduct);
+            }, handleFirestoreError),
+            onSnapshot(devLogsRef, (snapshot) => {
+              markCollectionReady("devLogs", collectionDocsToArray(snapshot, normalizeDevLog), normalizeDevLog);
+            }, handleFirestoreError),
+            onSnapshot(salesRef, (snapshot) => {
+              markCollectionReady("sales", collectionDocsToArray(snapshot, normalizeSale), normalizeSale);
+            }, handleFirestoreError)
+          );
+          state.firebase.initialized = true;
+          setSessionToFirestore("同期済み");
+          renderApp();
+        } catch (error) {
+          handleFirestoreError(error);
+        }
+      }
+
+      function handleFirestoreError(error) {
+        console.error("Firestore sync failed:", error);
+        clearFirestoreListeners();
+        state.firebase.initialized = true;
+        setSessionToLocal("Firestore 読み込みに失敗したため localStorage を表示しています");
+        state.notice = "Firestoreの読み込みに失敗したため、localStorage のデータを表示しています。";
+        state.noticeKind = "error";
+        renderApp();
+      }
+
+      async function initializeFirebaseServices() {
+        if (!isFirebaseConfigured()) {
+          state.firebase.configured = false;
+          state.firebase.initialized = true;
+          state.auth.ready = true;
+          state.auth.user = null;
+          state.auth.email = "";
+          state.auth.error = "";
+          setSessionToLocal("FirebaseConfig 未設定のため localStorage を表示しています");
+          renderApp();
+          return;
+        }
+        try {
+          state.firebase.configured = true;
+          const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+          state.firebase.app = app;
+          state.firebase.auth = getAuth(app);
+          state.firebase.db = getFirestore(app);
+          onAuthStateChanged(state.firebase.auth, async (user) => {
+            clearFirestoreListeners();
+            state.firebase.collectionsReady = { products: false, devLogs: false, sales: false };
+            state.firebase.seedAttempted = false;
+            state.firebase.initialized = false;
+            state.auth.ready = true;
+            state.auth.user = user || null;
+            state.auth.email = user?.email || "";
+            state.auth.error = "";
+            state.auth.localMode = false;
+            if (user) {
+              setSyncState("保存中", "Firestore を同期中");
+              renderApp();
+              await startFirestoreSync();
+              return;
+            }
+            state.firebase.initialized = true;
+            setUnauthenticatedState();
+            state.notice = "Firebase にログインしてください。";
+            state.noticeKind = "success";
+            renderApp();
+          });
+        } catch (error) {
+          handleFirestoreError(error);
+        }
+      }
+
+      async function signInOrRegister(mode) {
+        if (!state.firebase.auth) {
+          setAuthState({ error: "Firebase設定が未完了です。", ready: true });
+          setSessionToLocal("FirebaseConfig を入力すると同期が有効になります");
+          renderApp();
+          return;
+        }
+        const email = normalizeText(state.auth.emailInput);
+        const password = normalizeText(state.auth.passwordInput);
+        if (!email || !password) {
+          setAuthState({ error: "メールアドレスとパスワードを入力してください。" });
+          renderApp();
+          return;
+        }
+        try {
+          setAuthState({ error: "" });
+          setSyncState("保存中", mode === "register" ? "アカウント作成中" : "ログイン中");
+          if (mode === "register") {
+            await createUserWithEmailAndPassword(state.firebase.auth, email, password);
+          } else {
+            await signInWithEmailAndPassword(state.firebase.auth, email, password);
+          }
+        } catch (error) {
+          setAuthState({ error: error?.message || "ログインに失敗しました。", ready: true });
+          state.firebase.initialized = true;
+          state.auth.localMode = false;
+          state.sync.status = "エラー";
+          state.sync.detail = error?.message || "ログインに失敗しました。";
+          state.sync.error = error?.message || "ログインに失敗しました。";
+          state.sync.saving = false;
+          state.notice = error?.message || "ログインに失敗しました。";
+          state.noticeKind = "error";
+          renderApp();
+        }
+      }
+
+      async function signOutFirebase() {
+        if (!state.firebase.auth) {
+          setAuthState({ user: null, email: "", ready: true });
+          setSessionToLocal();
+          renderApp();
+          return;
+        }
+        await signOut(state.firebase.auth);
+      }
+
+      async function migrateLocalCacheToFirestore() {
+        if (!state.firebase.db || !state.auth.user) {
+          showNotice("Firestore にログインしてから実行してください。", "error");
+          return;
+        }
+        const confirmed = confirm("この端末のlocalStorageデータをFirestoreへアップロードします。既存IDは上書きせず、重複しないものだけ追加します。よろしいですか？");
+        if (!confirmed) return;
+        const remote = await Promise.all([
+          fetchCollectionOnce("products", normalizeProduct),
+          fetchCollectionOnce("devLogs", normalizeDevLog),
+          fetchCollectionOnce("sales", normalizeSale)
+        ]);
+        const remoteIds = {
+          products: new Set(remote[0].map((item) => item.id)),
+          devLogs: new Set(remote[1].map((item) => item.id)),
+          sales: new Set(remote[2].map((item) => item.id))
+        };
+        const batch = writeBatch(state.firebase.db);
+        let added = 0;
+        for (const product of state.db.products) {
+          if (remoteIds.products.has(product.id)) continue;
+          batch.set(doc(collection(familyDocRef(), "products"), product.id), normalizeProduct(product));
+          added += 1;
+        }
+        for (const log of state.db.devLogs) {
+          if (remoteIds.devLogs.has(log.id)) continue;
+          batch.set(doc(collection(familyDocRef(), "devLogs"), log.id), normalizeDevLog(log));
+          added += 1;
+        }
+        for (const sale of state.db.sales) {
+          if (remoteIds.sales.has(sale.id)) continue;
+          batch.set(doc(collection(familyDocRef(), "sales"), sale.id), normalizeSale(sale));
+          added += 1;
+        }
+        setSyncState("保存中", "localStorage データをFirestoreへアップロード中");
+        await batch.commit();
+        setNotice(`${added}件をFirestoreへ追加しました。`, "success");
+      }
 
       function emptyProductDraft() {
         return {
@@ -1111,25 +1585,7 @@
       }
 
       function loadDatabase() {
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          if (!raw) {
-            const fresh = createDefaultDatabase();
-            saveDatabase(fresh);
-            return fresh;
-          }
-          const parsed = JSON.parse(raw);
-          const db = normalizeDatabase(parsed && parsed.data ? parsed.data : parsed);
-          ensureSeedData(db);
-          return db;
-        } catch (error) {
-          console.warn("Failed to load localStorage database:", error);
-          state.notice = "localStorageの読み込みに失敗したため、初期データで復旧しました。";
-          state.noticeKind = "error";
-          const fresh = createDefaultDatabase();
-          saveDatabase(fresh);
-          return fresh;
-        }
+        return loadLocalCache();
       }
 
       function createDefaultDatabase() {
@@ -1142,7 +1598,7 @@
         return db;
       }
 
-      function normalizeDatabase(input) {
+      function normalizeDatabase(input, options = {}) {
         const source = input && typeof input === "object" ? input : {};
         const products = Array.isArray(source.products) ? source.products.map(normalizeProduct) : [];
         const productMap = new Map(products.map((product) => [String(product.id), product]));
@@ -1151,7 +1607,9 @@
           devLogs: Array.isArray(source.devLogs) ? source.devLogs.map(normalizeDevLog) : [],
           sales: Array.isArray(source.sales) ? source.sales.map((sale) => normalizeSale(sale, productMap)) : []
         };
-        ensureSeedData(db);
+        if (options.seed !== false) {
+          ensureSeedData(db);
+        }
         return db;
       }
 
@@ -1284,14 +1742,11 @@
       }
 
       function saveDatabase(db = state.db) {
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, exportedAt: nowIso(), data: db }));
-          return true;
-        } catch (error) {
-          console.error("Failed to save database:", error);
+        const ok = persistLocalCache(db);
+        if (!ok) {
           showNotice("保存に失敗しました。ブラウザの保存容量やプライベートモードを確認してください。", "error");
-          return false;
         }
+        return ok;
       }
 
       function setNotice(message, kind = "success", ttl = 2600) {
@@ -1324,16 +1779,119 @@
       function renderApp() {
         const app = document.getElementById("app");
         if (!app) return;
-        app.innerHTML = `
+        if (!state.firebase.initialized && isFirebaseConfigured() && !state.auth.localMode) {
+          app.innerHTML = renderLoadingScreen();
+          return;
+        }
+        if (!state.auth.ready && isFirebaseConfigured() && !state.auth.localMode) {
+          app.innerHTML = renderLoadingScreen();
+          return;
+        }
+        if (!state.auth.user && isFirebaseConfigured() && !state.auth.localMode) {
+          app.innerHTML = renderLoginScreen();
+          return;
+        }
+        app.innerHTML = renderMainShell();
+        if (state.tab === "sales-list") {
+          renderSalesTableSection();
+        }
+      }
+
+      function renderLoadingScreen() {
+        return `
           <div class="page">
             <header class="hero">
               <div>
-                <p class="eyebrow">3D printer side business / localStorage / GitHub Pages</p>
+                <p class="eyebrow">Firebase / authentication / Firestore</p>
+                <h1>3Dプリンター事業化ログ</h1>
+                <p>初期化中です。Firebase を使う場合は認証とリアルタイム同期を準備しています。</p>
+              </div>
+              <div class="pill-row">
+                <span class="pill muted">読み込み中</span>
+              </div>
+            </header>
+            <section class="card">
+              <div class="notice">認証状態と同期設定を確認しています。</div>
+            </section>
+          </div>
+        `;
+      }
+
+      function renderLoginScreen() {
+        const firebaseReady = isFirebaseConfigured();
+        return `
+          <div class="page">
+            <header class="hero">
+              <div>
+                <p class="eyebrow">Firebase Authentication / Firestore</p>
+                <h1>3Dプリンター事業化ログ</h1>
+                <p>メールアドレスとパスワードでログインすると、商品マスター・開発ログ・売上データを Firestore と自動同期します。</p>
+              </div>
+              <div class="pill-row">
+                <span class="pill ${syncBadgeClass(state.sync.status)}">${escapeHtml(state.sync.status)}</span>
+                <span class="pill muted">${firebaseReady ? "Firebase 接続待ち" : "FirebaseConfig 未設定"}</span>
+              </div>
+            </header>
+            <section class="card">
+              <div class="card-head">
+                <div>
+                  <h2>ログイン</h2>
+                  <p>${firebaseReady ? "メール/パスワードでログインしてください。" : "FirebaseConfig を入力するとログイン画面として使えます。現状はローカル表示に切り替えられます。"}</p>
+                </div>
+              </div>
+              <div class="notice${state.auth.error ? " error" : ""}">${escapeHtml(state.auth.error || state.notice)}</div>
+              <form class="stack" data-form="auth">
+                <div class="form-grid columns-2">
+                  <div class="field">
+                    <label>メールアドレス</label>
+                    <input name="email" type="email" autocomplete="email" inputmode="email" placeholder="name@example.com" value="${escapeHtml(state.auth.emailInput)}" />
+                  </div>
+                  <div class="field">
+                    <label>パスワード</label>
+                    <input name="password" type="password" autocomplete="current-password" placeholder="8文字以上推奨" value="${escapeHtml(state.auth.passwordInput)}" />
+                  </div>
+                </div>
+                <div class="toolbar">
+                  <button type="submit" class="primary" data-auth-action="login">ログイン</button>
+                  <button type="submit" class="secondary" data-auth-action="register">新規登録</button>
+                  ${firebaseReady ? "" : `<button type="button" class="secondary" data-action="continue-local">ローカル表示で続ける</button>`}
+                </div>
+              </form>
+            </section>
+            <footer class="footer-note">
+              このアプリのデータは、このブラウザ内に保存されます。iPhone変更・ブラウザ削除・履歴削除で消える可能性があります。定期的にJSONバックアップを保存してください。
+            </footer>
+          </div>
+        `;
+      }
+
+      function syncBadgeClass(status) {
+        if (status === "同期済み") return "good";
+        if (status === "保存中") return "warn";
+        if (status === "エラー") return "bad";
+        return "muted";
+      }
+
+      function renderMainShell() {
+        const localOnly = state.auth.localMode || !isFirebaseConfigured();
+        const syncDetail = state.sync.detail || (localOnly ? "localStorage キャッシュ" : "");
+        const showLogout = !!state.auth.user;
+        return `
+          <div class="page">
+            <header class="hero">
+              <div>
+                <p class="eyebrow">3D printer side business / Firebase sync / GitHub Pages</p>
                 <h1>3Dプリンター事業化ログ</h1>
                 <p>商品マスター、商品開発ログ、売上入力、売上一覧、商品別集計、月別集計、ジャンル別集計、CSV出力、JSONバックアップをひとつにまとめた iPhone 向けの単体Webアプリです。</p>
               </div>
-              <div id="notice" class="notice${state.noticeKind === "error" ? " error" : ""}">${escapeHtml(state.notice)}</div>
+              <div class="header-meta">
+                <span class="pill ${syncBadgeClass(state.sync.status)}">${escapeHtml(state.sync.status)}</span>
+                <span class="pill muted">${escapeHtml(syncDetail)}</span>
+                ${state.auth.email ? `<span class="pill">ログイン中: ${escapeHtml(state.auth.email)}</span>` : ""}
+                ${showLogout ? `<button type="button" class="secondary" data-action="logout">ログアウト</button>` : ""}
+              </div>
             </header>
+            <div id="notice" class="notice${state.noticeKind === "error" ? " error" : ""}">${escapeHtml(state.notice)}</div>
             <nav class="tabs" id="tabs">
               ${TAB_ORDER.map((tab) => `<button type="button" data-tab="${tab}" class="${state.tab === tab ? "active" : ""}">${escapeHtml(TAB_LABELS[tab])}</button>`).join("")}
             </nav>
@@ -1345,9 +1903,6 @@
             </footer>
           </div>
         `;
-        if (state.tab === "sales-list") {
-          renderSalesTableSection();
-        }
       }
 
       function renderActiveTab() {
@@ -2325,6 +2880,7 @@
                   <button type="button" data-action="export-csv-product-agg">商品別集計CSV</button>
                   <button type="button" data-action="export-csv-month-agg">月別集計CSV</button>
                   <button type="button" data-action="export-csv-genre-agg">ジャンル別集計CSV</button>
+                  ${state.auth.user && state.firebase.db ? `<button type="button" class="secondary" data-action="migrate-local-to-firestore">この端末のlocalStorageデータをFirestoreへアップロード</button>` : ""}
                 </div>
                 <div class="import-box">
                   <div class="subtle-box">
@@ -2471,6 +3027,7 @@
           state.db.products.unshift(item);
         }
         saveDatabase();
+        queueFirestoreUpsert("products", item);
         state.forms.product = emptyProductDraft();
         renderApp();
         setNotice("商品マスターを保存しました。", "success");
@@ -2521,6 +3078,7 @@
           state.db.devLogs.unshift(item);
         }
         saveDatabase();
+        queueFirestoreUpsert("devLogs", item);
         state.forms.devlog = emptyDevLogDraft();
         renderApp();
         setNotice("商品開発ログを保存しました。", "success");
@@ -2575,6 +3133,7 @@
           state.db.sales.unshift(item);
         }
         saveDatabase();
+        queueFirestoreUpsert("sales", item);
         state.forms.sale = emptySaleDraft();
         renderApp();
         setNotice("売上を保存しました。", "success");
@@ -2585,6 +3144,7 @@
         if (!confirmed) return;
         state.db[collectionName] = state.db[collectionName].filter((item) => item.id !== id);
         saveDatabase();
+        queueFirestoreRemove(collectionName, id);
         renderApp();
         setNotice("削除しました。", "success");
       }
@@ -2595,6 +3155,7 @@
         product.active = !product.active;
         product.updatedAt = nowIso();
         saveDatabase();
+        queueFirestoreUpsert("products", normalizeProduct(product));
         renderApp();
         setNotice(product.active ? "商品を有効にしました。" : "商品を無効にしました。", "success");
       }
@@ -2891,6 +3452,14 @@
         if (!actionButton) return;
         const action = actionButton.dataset.action;
         const id = actionButton.dataset.id;
+        if (action === "logout") return void signOutFirebase();
+        if (action === "continue-local") {
+          setAuthState({ ready: true, localMode: true, user: null, email: "", error: "" });
+          setSessionToLocal("FirebaseConfig が未設定のためローカル表示を続けます");
+          renderApp();
+          return;
+        }
+        if (action === "migrate-local-to-firestore") return void migrateLocalCacheToFirestore();
         if (action === "reset-product") return resetProductForm();
         if (action === "reset-devlog") return resetDevLogForm();
         if (action === "reset-sale") return resetSaleForm();
@@ -2961,6 +3530,15 @@
         const form = target.closest("form[data-form]");
         if (form) {
           const formName = form.dataset.form;
+          if (formName === "auth") {
+            if (target.name === "email") {
+              state.auth.emailInput = target.value;
+            }
+            if (target.name === "password") {
+              state.auth.passwordInput = target.value;
+            }
+            return;
+          }
           if (formName === "product") {
             handleProductInput(target);
             return;
@@ -3102,6 +3680,10 @@
           return;
         }
         const name = form.dataset.form;
+        if (name === "auth") {
+          const action = event.submitter?.dataset?.authAction || "login";
+          return void signInOrRegister(action === "register" ? "register" : "login");
+        }
         if (name === "product") return saveProductDraft();
         if (name === "devlog") return saveDevLogDraft();
         if (name === "sale") return saveSaleDraft();
@@ -3113,10 +3695,11 @@
         state.forms.devlog = emptyDevLogDraft();
         state.forms.sale = emptySaleDraft();
         saveDatabase();
-        renderApp();
         attachGlobalListeners();
         syncSaleFormFields();
         updateSalePreview();
+        void initializeFirebaseServices();
+        renderApp();
       }
 
       function attachGlobalListeners() {
