@@ -35,6 +35,8 @@
       body {
         margin: 0;
         min-height: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
         background:
           radial-gradient(circle at top left, rgba(15, 118, 110, 0.09), transparent 32rem),
           radial-gradient(circle at top right, rgba(180, 83, 9, 0.09), transparent 28rem),
@@ -124,6 +126,7 @@
 
       .page {
         max-width: 1540px;
+        width: min(1540px, 100%);
         margin: 0 auto;
         padding: 14px 14px 70px;
       }
@@ -136,6 +139,7 @@
         padding: 20px 18px;
         display: grid;
         gap: 12px;
+        min-width: 0;
       }
 
       .eyebrow {
@@ -160,6 +164,8 @@
         font-size: 1.02rem;
         line-height: 1.7;
         max-width: 54rem;
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
 
       .header-meta {
@@ -167,6 +173,7 @@
         flex-wrap: wrap;
         gap: 10px;
         align-items: center;
+        min-width: 0;
       }
 
       .notice {
@@ -243,6 +250,7 @@
         border-radius: 26px;
         box-shadow: var(--shadow);
         padding: 16px;
+        min-width: 0;
       }
 
       .card.compact {
@@ -268,6 +276,8 @@
         color: var(--muted);
         line-height: 1.6;
         font-size: 0.95rem;
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
 
       .metric {
@@ -312,6 +322,7 @@
       .field {
         display: grid;
         gap: 7px;
+        min-width: 0;
       }
 
       .field.inline {
@@ -324,6 +335,8 @@
         font-weight: 800;
         font-size: 0.95rem;
         line-height: 1.35;
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
 
       .field small,
@@ -331,11 +344,14 @@
         color: var(--muted);
         font-size: 0.86rem;
         line-height: 1.5;
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
 
       .input-line {
         display: grid;
         gap: 8px;
+        min-width: 0;
       }
 
       .inline-controls {
@@ -354,6 +370,7 @@
         flex-wrap: wrap;
         gap: 10px;
         align-items: center;
+        min-width: 0;
       }
 
       .toolbar > * {
@@ -377,6 +394,7 @@
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
+        min-width: 0;
       }
 
       .pill {
@@ -390,6 +408,9 @@
         font-weight: 700;
         font-size: 0.88rem;
         line-height: 1;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        min-width: 0;
       }
 
       .pill.good {
@@ -413,6 +434,8 @@
         border-radius: 22px;
         border: 1px solid rgba(29, 36, 32, 0.08);
         background: rgba(255, 255, 255, 0.72);
+        max-width: 100%;
+        min-width: 0;
       }
 
       table {
@@ -492,6 +515,7 @@
         border-radius: 22px;
         background: rgba(255, 255, 255, 0.9);
         border: 1px solid rgba(29, 36, 32, 0.08);
+        min-width: 0;
       }
 
       .summary-card .k {
@@ -542,6 +566,7 @@
         border-radius: 22px;
         background: rgba(15, 118, 110, 0.06);
         border: 1px solid rgba(15, 118, 110, 0.12);
+        min-width: 0;
       }
 
       .live-calc .box .label {
@@ -561,6 +586,7 @@
         border-radius: 18px;
         background: rgba(29, 36, 32, 0.04);
         border: 1px dashed rgba(29, 36, 32, 0.15);
+        min-width: 0;
       }
 
       .import-box {
@@ -572,6 +598,7 @@
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
+        min-width: 0;
       }
 
       .radio-chip {
@@ -583,6 +610,7 @@
         border: 1px solid rgba(29, 36, 32, 0.12);
         background: rgba(255, 255, 255, 0.95);
         font-weight: 700;
+        min-width: 0;
       }
 
       .mini-title {
@@ -613,13 +641,22 @@
 
       @media (max-width: 640px) {
         .page {
-          padding-inline: 10px;
+          padding-inline: 8px;
           padding-bottom: 84px;
         }
 
         .hero {
-          padding: 16px 14px;
-          border-radius: 26px;
+          padding: 14px 12px;
+          border-radius: 24px;
+          gap: 10px;
+        }
+
+        .hero h1 {
+          font-size: clamp(1.65rem, 10vw, 2.2rem);
+        }
+
+        .hero p {
+          font-size: 0.96rem;
         }
 
         .card,
@@ -628,23 +665,45 @@
           border-radius: 22px;
         }
 
-        .bottom-actions {
-          gap: 8px;
+        .header-meta,
+        .toolbar,
+        .inline-controls,
+        .bottom-actions,
+        .pill-row,
+        .radio-row {
+          flex-direction: column;
+          align-items: stretch;
         }
 
         button {
           width: 100%;
+          max-width: 100%;
+          white-space: normal;
         }
 
-        .toolbar button,
-        .inline-controls button,
-        .bottom-actions button,
         .tabs button {
           width: auto;
         }
 
+        .toolbar > *,
+        .inline-controls > *,
+        .bottom-actions > *,
+        .header-meta > *,
+        .pill-row > *,
+        .radio-row > * {
+          width: 100%;
+        }
+
         .tabs {
           padding-bottom: 4px;
+        }
+
+        .field.inline {
+          grid-template-columns: 1fr;
+        }
+
+        table {
+          min-width: 760px;
         }
       }
     </style>
